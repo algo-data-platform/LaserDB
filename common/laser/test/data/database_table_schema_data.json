@@ -1,0 +1,14 @@
+[
+    {
+        "Tables": [
+            {
+                "Engine": "rocksdb",
+                "TableName": "test_string_set",
+                "PartitionNumber": 10,
+                "Loaders": [],
+                "ConfigName": "default"
+            }
+        ],
+        "DatabaseName": "test"
+    }
+]

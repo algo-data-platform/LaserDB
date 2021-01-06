@@ -1,0 +1,21 @@
+# 运行 python 脚本
+
+ - 安装 virtualenv
+    
+    sudo pip install virtualenv
+
+ - 创建虚拟环境 
+
+    virtualenv --no-site-packages venv
+
+ - 安装依赖包
+
+    ./venv/bin/pip install -r requirements.txt
+
+ - 生成测试 mock 数据 
+  
+    ./venv/bin/python create_mock_data.py --output_name xxx.data --numbers 10000
+
+ - 更新配置
+
+    ./venv/bin/python load_config.py --env dev

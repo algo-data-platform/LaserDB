@@ -1,0 +1,71 @@
+From 3ac439c080525e3d5d1a32bafa4edaa7aee49398 Mon Sep 17 00:00:00 2001
+From: ZhongXiu Hao <nmred.hao@gmail.com>
+Date: Fri, 6 Nov 2020 11:55:59 +0800
+Subject: [PATCH] patch rocksdb
+
+---
+ db/compacted_db_impl.cc            | 2 +-
+ db/db_impl/db_impl_open.cc         | 6 +++---
+ table/block_based/filter_policy.cc | 2 +-
+ table/plain/plain_table_bloom.h    | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/db/compacted_db_impl.cc b/db/compacted_db_impl.cc
+index fddccb1..0f28388 100644
+--- db/compacted_db_impl.cc
++++ db/compacted_db_impl.cc
+@@ -149,7 +149,7 @@ Status CompactedDBImpl::Open(const Options& options,
+   std::unique_ptr<CompactedDBImpl> db(new CompactedDBImpl(db_options, dbname));
+   Status s = db->Init(options);
+   if (s.ok()) {
+-    db->StartTimedTasks();
++    // db->StartTimedTasks();
+     ROCKS_LOG_INFO(db->immutable_db_options_.info_log,
+                    "Opened the db as fully compacted mode");
+     LogFlush(db->immutable_db_options_.info_log);
+diff --git a/db/db_impl/db_impl_open.cc b/db/db_impl/db_impl_open.cc
+index 058d542..ec8fcc0 100644
+--- db/db_impl/db_impl_open.cc
++++ db/db_impl/db_impl_open.cc
+@@ -1715,9 +1715,9 @@ Status DBImpl::Open(const DBOptions& db_options, const std::string& dbname,
+           persist_options_status.ToString());
+     }
+   }
+-  if (s.ok()) {
+-    impl->StartTimedTasks();
+-  }
++  // if (s.ok()) {
++  //   impl->StartTimedTasks();
++  // }
+   if (!s.ok()) {
+     for (auto* h : *handles) {
+       delete h;
+diff --git a/table/block_based/filter_policy.cc b/table/block_based/filter_policy.cc
+index 9520e2d..1bec662 100644
+--- table/block_based/filter_policy.cc
++++ table/block_based/filter_policy.cc
+@@ -16,7 +16,7 @@
+ #include "table/block_based/block_based_filter_block.h"
+ #include "table/block_based/full_filter_block.h"
+ #include "table/block_based/filter_policy_internal.h"
+-#include "third-party/folly/folly/ConstexprMath.h"
++#include "folly/ConstexprMath.h"
+ #include "util/bloom_impl.h"
+ #include "util/coding.h"
+ #include "util/hash.h"
+diff --git a/table/plain/plain_table_bloom.h b/table/plain/plain_table_bloom.h
+index fdacdb0..3134f51 100644
+--- table/plain/plain_table_bloom.h
++++ table/plain/plain_table_bloom.h
+@@ -13,7 +13,7 @@
+ #include "util/bloom_impl.h"
+ #include "util/hash.h"
+ 
+-#include "third-party/folly/folly/ConstexprMath.h"
++#include "folly/ConstexprMath.h"
+ 
+ #include <memory>
+ 
+-- 
+1.8.3.1
+

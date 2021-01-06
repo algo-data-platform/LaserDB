@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "middlerware",
+    srcs = [
+        "auth.go",
+        "cors.go",
+    ],
+    importpath = "laser-control/middlerware",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//control/common",
+        "//control/context",
+        "@com_github_gin_gonic_gin//:go_default_library",
+    ],
+)

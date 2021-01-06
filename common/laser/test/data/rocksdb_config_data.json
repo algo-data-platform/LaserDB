@@ -1,0 +1,13 @@
+{
+    "TableOptions": {
+        "filter_policy": "bloomfilter:10:true"
+    },
+    "WriteBufferSizeGb": 1,
+    "DbOptions": {
+        "create_if_missing": "true"
+    },
+    "CfOptions": {
+        "num_levels": "7"
+    },
+    "BlockCacheSizeGb": 2
+}

@@ -1,0 +1,39 @@
+- name: mount /dev/shm
+  become: yes
+  mount:
+    path: /dev/shm
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,size={{ramdisk_size}}
+    state: mounted
+  tags:
+    - ramdisk_init
+    - upgrade
+- name: create service instance dir
+  file:
+    path: /usr/local/adbot/{{instance_name}}
+    owner: adbot
+    group: adbot
+    state: directory
+  tags:
+    - ramdisk_init
+    - upgrade
+- name: create service data dir in /dev/shm
+  file:
+    path: /dev/shm/{{instance_name}}/data
+    owner: adbot
+    group: adbot
+    state: directory
+  tags:
+    - ramdisk_init
+    - upgrade
+- name: link service data dir to /dev/shm
+  file:
+    path: /usr/local/adbot/{{instance_name}}/data
+    src: /dev/shm/{{instance_name}}/data
+    owner: adbot
+    group: adbot
+    state: link
+  tags:
+    - ramdisk_init
+    - upgrade

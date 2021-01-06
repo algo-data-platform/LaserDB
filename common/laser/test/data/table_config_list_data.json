@@ -1,0 +1,41 @@
+{
+  "TableConfigList": {
+    "default": {
+      "TableOptions": {
+        "filter_policy": "bloomfilter:10:true"
+      },
+      "Version": 5,
+      "DbOptions": {
+        "create_if_missing": "true"
+      },
+      "CfOptions": {
+        "num_levels": "10"
+      }
+    },
+    "table_config1": {
+      "TableOptions": {
+        "filter_policy": "bloomfilter:10:true"
+      },
+      "Version": 13,
+      "DbOptions": {
+        "create_if_missing": "true",
+        "stats_persist_period_sec": "1000"
+      },
+      "CfOptions": {
+        "num_levels": "12"
+      }
+    },
+    "table_config2": {
+      "TableOptions": {
+        "filter_policy": "bloomfilter:10:true"
+      },
+      "Version": 2,
+      "DbOptions": {
+        "create_if_missing": "true"
+      },
+      "CfOptions": {
+        "num_levels": "7"
+      }
+    }
+  }
+}

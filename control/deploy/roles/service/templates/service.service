@@ -1,0 +1,21 @@
+[Unit]
+Description=Ad core team general server daemon
+After=network.target
+
+[Service]
+User={{ad_core_user}}
+Group={{ad_core_group}}
+Type=simple
+PIDFile={{service_pid_path}}
+EnvironmentFile={{service_env_path}}
+ExecStart={{service_bin}} $OPTIONS
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+KillMode=process
+Restart=on-failure
+RestartPreventExitStatus=255
+LimitCORE=infinity
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

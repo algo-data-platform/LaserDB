@@ -1,0 +1,26 @@
+- name: create config dir
+  file:
+    path: /usr/local/adbot/{{instance_name}}/config
+    owner: adbot
+    group: adbot
+    state: directory
+  tags:
+    - upgrade
+- name: copy application.properties config file
+  template:
+    src: roles/laser_batch_update/templates/application.properties
+    dest: /usr/local/adbot/{{instance_name}}/config/application.properties
+    owner: adbot
+    group: adbot
+    mode: 0644
+  tags:
+    - upgrade
+- name: copy log4j2.properties config file 
+  template:
+    src: roles/laser_batch_update/templates/log4j2.properties
+    dest: /usr/local/adbot/{{instance_name}}/config/log4j2.properties
+    owner: adbot
+    group: adbot
+    mode: 0644
+  tags:
+    - upgrade

@@ -1,0 +1,18 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "context",
+    srcs = [
+        "config.go",
+        "context.go",
+    ],
+    importpath = "laser-control/context",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//control/logger",
+        "@com_github_jinzhu_gorm//:go_default_library",
+        "@com_github_jinzhu_gorm//dialects/mysql:go_default_library",
+        "@com_github_jinzhu_gorm//dialects/sqlite:go_default_library",
+        "@com_github_spf13_viper//:go_default_library",
+    ],
+)

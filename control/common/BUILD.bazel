@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "common",
+    srcs = [
+        "errors.go",
+        "send_mail.go",
+        "timer.go",
+        "validator.go",
+    ],
+    importpath = "laser-control/common",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_gin_gonic_gin//binding:go_default_library",
+        "@in_gopkg_go_playground_validator_v9//:go_default_library",
+    ],
+)

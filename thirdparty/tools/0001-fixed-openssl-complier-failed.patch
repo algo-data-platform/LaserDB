@@ -1,0 +1,32 @@
+From 3ed78fa83f3b3464f2bd969f569e2f93702bb09e Mon Sep 17 00:00:00 2001
+From: nmred <nmred_2008@126.com>
+Date: Tue, 3 Nov 2020 11:17:31 +0800
+Subject: [PATCH] fixed openssl complier failed
+
+---
+ tools/build_defs/cc_toolchain_util.bzl | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/tools/build_defs/cc_toolchain_util.bzl b/tools/build_defs/cc_toolchain_util.bzl
+index 61cc67c..fd9e7f3 100755
+--- tools/build_defs/cc_toolchain_util.bzl
++++ tools/build_defs/cc_toolchain_util.bzl
+@@ -354,12 +354,14 @@ def get_flags_info(ctx, link_output_file = None):
+             ),
+         ),
+     )
++    cxx_linker_executable_new_flags = _add_if_needed(flags.cxx_linker_executable, linkopts)
++    cxx_linker_executable_new_flags.remove("-l:libstdc++.a")
+     return CxxFlagsInfo(
+         cc = _add_if_needed(flags.cc, copts),
+         cxx = _add_if_needed(flags.cxx, cxxopts),
+         cxx_linker_shared = _add_if_needed(flags.cxx_linker_shared, linkopts),
+         cxx_linker_static = flags.cxx_linker_static,
+-        cxx_linker_executable = _add_if_needed(flags.cxx_linker_executable, linkopts),
++        cxx_linker_executable = cxx_linker_executable_new_flags,
+         assemble = _add_if_needed(flags.assemble, copts),
+     )
+ 
+-- 
+1.8.3.1
+

@@ -1,0 +1,5 @@
+
+bazel-*
+.vscode/
+*.pyc
+compile_commands.json
