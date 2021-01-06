@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[26],{82:function(e){e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"\u5fae\u535a\u81ea\u7814 KV \u5206\u5e03\u5f0f\u5b58\u50a8\u7cfb\u7edf LaserDB \u7684\u5b9e\u73b0\u4e0e\u5e94\u7528","permalink":"/blog/laserdb-in-weibo"}]}')}}]);

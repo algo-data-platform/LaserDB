@@ -1,6 +1,0 @@
-start_options: ""
-service_env: "service"
-ad_core_user: "adbot"
-ad_core_group: "adbot"
-service_file: "service"
-service_bin: /usr/local/adbot/{{instance_name}}/{{package_tag}}/bin/{{package_name}}

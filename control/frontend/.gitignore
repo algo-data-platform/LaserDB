@@ -1,4 +1,0 @@
-theme/*.css
-!theme/index.css
-node_modules/*
-dist/*
