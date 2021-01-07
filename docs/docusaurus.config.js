@@ -1,12 +1,12 @@
 module.exports = {
   title: 'LaserDB',
   tagline: 'A distributed database with high performance which support batch import',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://algo-data-platform.github.io',
+  baseUrl: '/LaserDB/',
   onBrokenLinks: 'throw',
   favicon: 'img/small-logo.png',
-  organizationName: 'laserdb', // Usually your GitHub org/user name.
-  projectName: 'laserdb', // Usually your repo name.
+  organizationName: 'algo-data-platform', // Usually your GitHub org/user name.
+  projectName: 'LaserDB', // Usually your repo name.
   themeConfig: {
     colorMode: {
       disableSwitch: true,
