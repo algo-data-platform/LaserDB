@@ -3,12 +3,9 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Rule repository
 http_archive(
     name = "rules_foreign_cc",
-    patches = [
-        "@//thirdparty/tools:0001-fixed-openssl-complier-failed.patch",
-    ],
-    sha256 = "3e6b0691fc57db8217d535393dcc2cf7c1d39fc87e9adb6e7d7bab1483915110",
-    strip_prefix = "rules_foreign_cc-master",
-    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/master.zip",
+    urls = ["https://github.com/bazelbuild/rules_foreign_cc/archive/8ae46519293f41075a7f5ec253ac5ad4321d309c.zip"],
+    sha256 = "b95cceb9cb69323bf37a1f126d564ea3e03816c7fdb752c76016f7f36d6df9d9",
+    strip_prefix = "rules_foreign_cc-8ae46519293f41075a7f5ec253ac5ad4321d309c",
 )
 
 RULES_JVM_EXTERNAL_TAG = "3.3"

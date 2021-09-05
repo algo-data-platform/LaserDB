@@ -1,0 +1,16 @@
+common --color=yes
+common --experimental_ui_max_stdouterr_bytes=1073741819
+
+# bazel build
+build --action_env=BAZEL_CXXOPTS=-std=gnu++17
+
+# for java
+build --nojava_header_compilation
+
+# test
+test --test_output=all --action_env="GTEST_COLOR=1"
+
+# set GOPROXY
+test --action_env=GOPROXY=https://goproxy.io
+build --action_env=GOPROXY=https://goproxy.io
+run --action_env=GOPROXY=https://goproxy.io

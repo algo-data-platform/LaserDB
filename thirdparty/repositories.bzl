@@ -265,14 +265,14 @@ def include_repositories():
     http_archive(
         name = "cityhash",
         build_file = "@//thirdparty/cityhash:cityhash.BUILD",
-        strip_prefix = "cityhash-master",
+        strip_prefix = "cityhash-8af9b8c2b889d80c22d6bc26ba0df1afb79a30db",
         patches = [
             "@//thirdparty/cityhash:cityhash.patch",
         ],
         urls = [
-            "https://github.com/google/cityhash/archive/master.zip",
+            "https://github.com/google/cityhash/archive/8af9b8c2b889d80c22d6bc26ba0df1afb79a30db.zip",
         ],
-        sha256 = "2d3d236b799a7298827ec37ee21d8b0d9190e15add6f02ae21d651d812747152",
+        sha256 = "3524f5ed43143974a29fddeeece29c8b6348f05db08dd180452da01a2837ddce",
     )
 
     http_archive(
