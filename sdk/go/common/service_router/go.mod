@@ -3,7 +3,7 @@ module github.com/algo-data-platform/LaserDB/sdk/go/common/service_router
 go 1.15
 
 require (
-	github.com/algo-data-platform/LaserDB/sdk/go/common/ip v0.0.0-20210111033758-ba96f4d1f4a4
+	github.com/algo-data-platform/LaserDB/sdk/go/common/ip v0.0.0-20210907153512-2a49581ecd29
 	github.com/facebook/fbthrift v0.31.0
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/hashicorp/consul/api v1.8.1
