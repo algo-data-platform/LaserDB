@@ -198,7 +198,6 @@ def include_repositories():
         name = "com_github_gflags_gflags",
         strip_prefix = "gflags-2.2.2",
         urls = [
-            "https://mirror.bazel.build/github.com/gflags/gflags/archive/v2.2.2.tar.gz",
             "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
         ],
         sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
