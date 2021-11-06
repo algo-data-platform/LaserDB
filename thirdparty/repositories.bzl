@@ -84,10 +84,9 @@ def include_repositories():
     http_archive(
         name = "m4",
         build_file_content = all_content,
-        strip_prefix = "m4-1.4.18",
-        sha256 = "ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab",
-        urls = ["https://ftp.gnu.org/gnu/m4/m4-1.4.18.tar.gz"],
-        patches = ["@//thirdparty/tools:m4.patch"],
+        strip_prefix = "m4-1.4.19",
+        sha256 = "3be4a26d825ffdfda52a56fc43246456989a3630093cced3fbddf4771ee58a70",
+        urls = ["https://ftp.gnu.org/gnu/m4/m4-1.4.19.tar.gz"],
     )
 
     http_archive(
@@ -177,6 +176,10 @@ def include_repositories():
         build_file = "@//thirdparty/folly:folly.BUILD",
         patches = [
             "@//thirdparty/folly:folly.patch",
+            "@//thirdparty/folly:folly1.patch",
+        ],
+        patch_args = [
+            "-p1"
         ],
         urls = [
             "https://github.com/facebook/folly/releases/download/v2020.10.26.00/folly-v2020.10.26.00.tar.gz",

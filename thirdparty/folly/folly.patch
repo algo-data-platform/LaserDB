@@ -8,11 +8,11 @@ Subject: [PATCH] add
  1 file changed, 85 insertions(+)
  create mode 100755 folly-config.h
 
-diff --git a/folly-config.h b/folly-config.h
+diff --git a/folly/folly-config.h b/folly/folly-config.h
 new file mode 100755
 index 0000000..13deca3
 --- /dev/null
-+++ folly/folly-config.h
++++ folly/folly/folly-config.h
 @@ -0,0 +1,85 @@
 +/*
 + * Copyright 2016 Facebook, Inc.
