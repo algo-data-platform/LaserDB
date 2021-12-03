@@ -1,0 +1,33 @@
+---
+name: main
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "16"
+      - uses: actions/cache@v2
+        with:
+          path: affected
+          key: affected.${{ github.sha }}
+      - uses: actions/cache@v2
+        env:
+          cache-name: bazel
+        with:
+          path: ~/.cache/bazelisk
+          key: ${{ env.cache-name }}-${{ runner.os }}
+      - run: npm install -g @bazel/bazelisk
+      - name: run build
+        run: |
+          sudo apt-get install gperf -y
+          bazel build //:release-tars
