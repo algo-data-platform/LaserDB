@@ -15,18 +15,19 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "boost/filesystem.hpp"
-#include "folly/ScopeGuard.h"
 #include "folly/ExceptionWrapper.h"
+#include "folly/ScopeGuard.h"
 
-#include "common/util.h"
-#include "common/laser/status.h"
 #include "common/laser/if/gen-cpp2/ReplicatorAsyncClient.h"
+#include "common/laser/status.h"
+#include "common/util.h"
 
-#include "replication_db.h"
 #include "expire_filter.h"
+#include "replication_db.h"
 #include "scoped_key_lock.h"
 
 namespace laser {
@@ -55,8 +56,9 @@ DEFINE_int32(delta_batch_load_numbers, 1000, "Delta data batch load numbers");
 
 DEFINE_bool(batch_ingest_format_is_sst, false, "Batch ingest file format is sst or not");
 
-DEFINE_int32(repliction_max_seq_no_diff_time_window_seconds, 5 * 60, "A time window to judge whether the difference" \
-            " of sequnce no between leader and follower is big enough to trigger base data replication");
+DEFINE_int32(repliction_max_seq_no_diff_time_window_seconds, 5 * 60,
+             "A time window to judge whether the difference"
+             " of sequnce no between leader and follower is big enough to trigger base data replication");
 
 DEFINE_int32(replication_max_seq_no_diff_minute_level, 1, "Max seq no diff minure level");
 
@@ -89,95 +91,75 @@ constexpr char ROCKSDB_WRITE_BYTES_MIN_1[] = "rocksdb.write_bytes_min_1";
 constexpr char ROCKSDB_READ_KPS_MIN_1[] = "rocksdb.read_kps_min_1";
 constexpr char ROCKSDB_WRITE_KPS_MIN_1[] = "rocksdb.write_kps_min_1";
 
-ReplicationDB::ReplicationDB(const std::string& data_dir, const rocksdb::Options& options) :
-    data_dir_(data_dir), options_(options) {
+ReplicationDB::ReplicationDB(const std::string& data_dir, const rocksdb::Options& options)
+    : data_dir_(data_dir), options_(options) {
   VLOG(3) << "Rocksdb create, data dir:" << data_dir_;
-  get_updates_timers_ = metrics::Metrics::getInstance()->buildTimers(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_GET_UPDATES,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
-  pull_rpc_request_latency_ = metrics::Metrics::getInstance()->buildHistograms(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_PULL_RPC_REQUEST_LATENCY,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
-  pull_rpc_response_latency_ = metrics::Metrics::getInstance()->buildHistograms(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_PULL_RPC_RESPONSE_LATENCY,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
-  whole_replication_latency_ = metrics::Metrics::getInstance()->buildHistograms(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_WHOLE_REPLICATION_LATENCY,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
-  apply_updates_numbers_ = metrics::Metrics::getInstance()->buildHistograms(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_APPLY_UPDATE_NUMBERS,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+  get_updates_timers_ = metrics::Metrics::getInstance()->buildTimers(
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_GET_UPDATES, REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
+      REPLICATION_DB_REPLICATOR_TIMER_MIN, REPLICATION_DB_REPLICATOR_TIMER_MAX);
+  pull_rpc_request_latency_ = metrics::Metrics::getInstance()->buildHistograms(
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_PULL_RPC_REQUEST_LATENCY,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
+  pull_rpc_response_latency_ = metrics::Metrics::getInstance()->buildHistograms(
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_PULL_RPC_RESPONSE_LATENCY,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
+  whole_replication_latency_ = metrics::Metrics::getInstance()->buildHistograms(
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_WHOLE_REPLICATION_LATENCY,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
+  apply_updates_numbers_ = metrics::Metrics::getInstance()->buildHistograms(
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_APPLY_UPDATE_NUMBERS,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
   apply_updates_timers_ = metrics::Metrics::getInstance()->buildTimers(
-                                             REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_APPLY_UPDATE_TIMERS,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_APPLY_UPDATE_TIMERS,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
   apply_updates_kps_ = metrics::Metrics::getInstance()->buildMeter(REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_REPLICATOR_APPLY_UPDATE_KPS);
+                                                                   REPLICATION_DB_REPLICATOR_APPLY_UPDATE_KPS);
   interval_between_write_and_replicate_ = metrics::Metrics::getInstance()->buildHistograms(
-                                             REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_LEADER_INTERVAL_BETWEEN_WRITE_AND_REPLICATE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_LEADER_INTERVAL_BETWEEN_WRITE_AND_REPLICATE,
+      REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE, REPLICATION_DB_REPLICATOR_TIMER_MIN,
+      REPLICATION_DB_REPLICATOR_TIMER_MAX);
   write_timers_ = metrics::Metrics::getInstance()->buildTimers(
-                                             REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_WRITE_TIME,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_WRITE_TIME, REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
+      REPLICATION_DB_REPLICATOR_TIMER_MIN, REPLICATION_DB_REPLICATOR_TIMER_MAX);
   write_timers_without_lock_ = metrics::Metrics::getInstance()->buildTimers(
-                                             REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_WRITE_TIME_WITHOUT_LOCK,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_WRITE_TIME_WITHOUT_LOCK, REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
+      REPLICATION_DB_REPLICATOR_TIMER_MIN, REPLICATION_DB_REPLICATOR_TIMER_MAX);
   read_timers_ = metrics::Metrics::getInstance()->buildTimers(
-                                             REPLICATION_DB_MODULE_NAME,
-                                             REPLICATION_DB_READ_TIME,
-                                             REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MIN,
-                                             REPLICATION_DB_REPLICATOR_TIMER_MAX);
+      REPLICATION_DB_MODULE_NAME, REPLICATION_DB_READ_TIME, REPLICATION_DB_REPLICATOR_TIMER_BUCKET_SIZE,
+      REPLICATION_DB_REPLICATOR_TIMER_MIN, REPLICATION_DB_REPLICATOR_TIMER_MAX);
 }
 
 void ReplicationDB::init(folly::EventBase* evb) {
   evb_ = evb;
   std::vector<int> minute_level{CUSTOM_PROPERTIES_MINUTE_LEVEL};
-  read_bytes_meter_ = std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME,
-                                                       ROCKSDB_READ_BYTES_MIN_1, evb_, minute_level);
+  read_bytes_meter_ =
+      std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME, ROCKSDB_READ_BYTES_MIN_1, evb_, minute_level);
   read_bytes_meter_->init();
   custom_properties_meters_.insert(std::make_pair(ROCKSDB_READ_BYTES_MIN_1, read_bytes_meter_));
 
-  write_bytes_meter_ = std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME,
-                                                        ROCKSDB_WRITE_BYTES_MIN_1, evb_, minute_level);
+  write_bytes_meter_ =
+      std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME, ROCKSDB_WRITE_BYTES_MIN_1, evb_, minute_level);
   write_bytes_meter_->init();
   custom_properties_meters_.insert(std::make_pair(ROCKSDB_WRITE_BYTES_MIN_1, write_bytes_meter_));
 
-  read_kps_meter_ = std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME,
-                                                     ROCKSDB_READ_KPS_MIN_1, evb_, minute_level);
+  read_kps_meter_ =
+      std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME, ROCKSDB_READ_KPS_MIN_1, evb_, minute_level);
   read_kps_meter_->init();
   custom_properties_meters_.insert(std::make_pair(ROCKSDB_READ_KPS_MIN_1, read_kps_meter_));
 
-  write_kps_meter_ = std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME,
-                                                      ROCKSDB_WRITE_KPS_MIN_1, evb_, minute_level);
+  write_kps_meter_ =
+      std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME, ROCKSDB_WRITE_KPS_MIN_1, evb_, minute_level);
   write_kps_meter_->init();
   custom_properties_meters_.insert(std::make_pair(ROCKSDB_WRITE_KPS_MIN_1, write_kps_meter_));
 
-  sequence_no_diff_ = std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME,
-                                                       REPLICATION_DB_REPLICATOR_SEQUENCE_NO_DIFF, evb_,
-                                                       std::vector<int>{
-                                                       FLAGS_replication_max_seq_no_diff_minute_level});
+  sequence_no_diff_ =
+      std::make_shared<metrics::Meter>(REPLICATION_DB_MODULE_NAME, REPLICATION_DB_REPLICATOR_SEQUENCE_NO_DIFF, evb_,
+                                       std::vector<int>{FLAGS_replication_max_seq_no_diff_minute_level});
   sequence_no_diff_->init();
   custom_properties_meters_.insert(std::make_pair(REPLICATION_DB_REPLICATOR_SEQUENCE_NO_DIFF, sequence_no_diff_));
 }
@@ -188,8 +170,7 @@ bool ReplicationDB::open() {
   if (!boost::filesystem::exists(bpath)) {
     try {
       boost::filesystem::create_directories(bpath);
-    }
-    catch (...) {
+    } catch (...) {
       LOG(ERROR) << "Create rocksdb data dir fail, dir:" << data_dir;
       return false;
     }
@@ -222,9 +203,7 @@ void ReplicationDB::iterator(IteratorCallback callback) {
   rocksdb::ReadOptions read_options;
   read_options.snapshot = db_->GetSnapshot();
   auto iter = db_->NewIterator(read_options);
-  SCOPE_EXIT {
-    delete iter;
-  };
+  SCOPE_EXIT { delete iter; };
   callback(iter);
   db_->ReleaseSnapshot(read_options.snapshot);
 }
@@ -304,9 +283,7 @@ Status ReplicationDB::convertIngestFile(const std::string& ingest_file, const st
     LOG(ERROR) << "Open local file fail, path:" << ingest_file;
     return Status::RS_ERROR;
   }
-  SCOPE_EXIT {
-    fin.close();
-  };
+  SCOPE_EXIT { fin.close(); };
 
   fin.seekg(0, fin.end);
   size_t length = fin.tellg();
@@ -406,9 +383,7 @@ void ReplicationDB::postIngest(const std::string& ingest_file) {
 Status ReplicationDB::ingestBaseSst(const std::string& ingest_file) {
   std::string final_ingest_file;
   Status pre_status = preIngest(&final_ingest_file, ingest_file);
-  SCOPE_EXIT {
-    postIngest(ingest_file);
-  };
+  SCOPE_EXIT { postIngest(ingest_file); };
   if (pre_status != Status::OK) {
     return pre_status;
   }
@@ -438,9 +413,7 @@ Status ReplicationDB::ingestDeltaSst(const std::string& ingest_file, const std::
 
   std::string final_ingest_file;
   Status pre_status = preIngest(&final_ingest_file, ingest_file);
-  SCOPE_EXIT {
-    postIngest(ingest_file);
-  };
+  SCOPE_EXIT { postIngest(ingest_file); };
   if (pre_status != Status::OK) {
     return pre_status;
   }
@@ -555,9 +528,7 @@ Status ReplicationDB::checkpoint(const std::string& checkpoint_path) {
   rocksdb::Checkpoint* checkpoint;
   rocksdb::Status status = rocksdb::Checkpoint::Create(db_.get(), &checkpoint);
 
-  SCOPE_EXIT {
-    delete checkpoint;
-  };
+  SCOPE_EXIT { delete checkpoint; };
 
   if (!status.ok()) {
     LOG(INFO) << "Error while create checkpoint, checkpoint path:" << checkpoint_path
@@ -643,9 +614,8 @@ Status ReplicationDB::exist(bool* result, std::string* value, const LaserSeriali
 
 void ReplicationDB::startReplicator(uint32_t shard_id, int64_t db_hash, const std::string& service_name,
                                     std::shared_ptr<folly::IOExecutor> executor, const DBRole& role,
-                                    const std::string& version, int64_t node_hash,
-                                    const std::string& client_address,
-                                    std::shared_ptr<WdtReplicatorManager> wdt_manager) {
+                                    const std::string& version, int64_t node_hash, const std::string& client_address,
+                                    std::shared_ptr<WdtReplicatorManager> wdt_manager, const std::string& src_dc) {
   shard_id_ = shard_id;
   db_hash_ = db_hash;
   replicator_service_name_ = service_name;
@@ -658,11 +628,26 @@ void ReplicationDB::startReplicator(uint32_t shard_id, int64_t db_hash, const st
   rpc_options_.setTimeout(std::chrono::milliseconds(FLAGS_replicator_max_server_wait_time_ms +
                                                     FLAGS_replicator_client_server_timeout_difference_ms));
   role_ = role;
+  src_dc_.withWLock([&src_dc](auto& dc) { dc = src_dc; });
   if (role == DBRole::FOLLOWER) {
     pullFromUpstream();
   }
 
   cleanIdleCachedIters();
+}
+
+void ReplicationDB::changeShardId(uint32_t shard_id) {
+  shard_id_ = shard_id;
+  LOG(INFO) << "Db " << db_hash_ << " shard_id changed to " << shard_id;
+}
+
+void ReplicationDB::changeSrcDc(const std::string& dc) {
+  src_dc_.withWLock([this, &dc](auto& src_dc) {
+    if (src_dc != dc) {
+      src_dc = dc;
+      LOG(INFO) << "Db " << db_hash_ << " dc changed to " << dc;
+    }
+  });
 }
 
 void ReplicationDB::changeRole(const DBRole& role) {
@@ -688,12 +673,12 @@ bool ReplicationDB::reachMaxSeqNoDiffLimit(const laser::ReplicateResponse& respo
   uint64_t seq_no_diff_min = 0;
   if (sequence_no_diff_) {
     sequence_no_diff_->mark(static_cast<double>(seq_no_diff));
-    seq_no_diff_min = static_cast<uint64_t>(sequence_no_diff_->getMinuteRate(
-                                              FLAGS_replication_max_seq_no_diff_minute_level));
+    seq_no_diff_min =
+        static_cast<uint64_t>(sequence_no_diff_->getMinuteRate(FLAGS_replication_max_seq_no_diff_minute_level));
   }
 
-  uint64_t update_kps_min = static_cast<uint64_t>(apply_updates_kps_->getMinuteRate(
-                                                   FLAGS_replication_max_seq_no_diff_minute_level));
+  uint64_t update_kps_min =
+      static_cast<uint64_t>(apply_updates_kps_->getMinuteRate(FLAGS_replication_max_seq_no_diff_minute_level));
   if (update_kps_min != 0 && seq_no_diff_min != 0) {
     if (seq_no_diff_min > update_kps_min * FLAGS_repliction_max_seq_no_diff_time_window_seconds) {
       LOG(INFO) << "Db " << db_hash_ << " version " << version_ << " has reach max seq no diff limit. "
@@ -721,8 +706,7 @@ void ReplicationDB::applyUpdates(folly::Try<ReplicateResponse>&& try_response) {
     delay_next_pull = true;
     try {
       try_response.exception().throw_exception();
-    }
-    catch (const LaserException& ex) {
+    } catch (const LaserException& ex) {
       LOG(ERROR) << "Db " << db_hash_ << " laserException: " << ex.get_message();
       if (ex.get_status() == Status::RP_SOURCE_WAL_LOG_REMOVED) {
         if (update_version_callback_) {
@@ -732,8 +716,7 @@ void ReplicationDB::applyUpdates(folly::Try<ReplicateResponse>&& try_response) {
                   << " trigger base data replication";
         return;
       }
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
       LOG(ERROR) << "Db " << db_hash_ << " std::exception: " << ex.what();
     }
   } else {
@@ -778,7 +761,7 @@ void ReplicationDB::applyUpdates(folly::Try<ReplicateResponse>&& try_response) {
         break;
       }
     }
-    VLOG(5) << "Db " <<  db_hash_ << " success apply updates, next pull seqno:" <<  db_->GetLatestSequenceNumber();
+    VLOG(5) << "Db " << db_hash_ << " success apply updates, next pull seqno:" << db_->GetLatestSequenceNumber();
 
     if (reachMaxSeqNoDiffLimit(response)) {
       if (update_version_callback_) {
@@ -827,7 +810,7 @@ void ReplicationDB::pullFromUpstream() {
     db->whole_replication_latency_->addValue(static_cast<double>(whole_latency));
   };
 
-  auto send_request = [&rpc_options, &req, this, weak_db, process_request = std::move(process_request) ](auto client) {
+  auto send_request = [&rpc_options, &req, this, weak_db, process_request = std::move(process_request)](auto client) {
     client->future_replicate(rpc_options, req).via(executor_.get()).then(std::move(process_request));
   };
 
@@ -853,19 +836,16 @@ void ReplicationDB::getPullRequest(ReplicateRequest* req, const ReplicateType& t
 void ReplicationDB::delayPullFromUpstream() {
   auto eb = executor_->getEventBase();
   std::weak_ptr<ReplicationDB> weak_db = shared_from_this();
-  eb->runInEventBaseThread([
-    eb,
-    weak_db = std::move(weak_db)
-  ]() {
-    eb->runAfterDelay([
-      weak_db = std::move(weak_db)
-    ] {
-      auto db = weak_db.lock();
-      if (db == nullptr) {
-        return;
-      }
-      db->pullFromUpstream();
-    }, FLAGS_replicator_pull_delay_on_error_ms);
+  eb->runInEventBaseThread([eb, weak_db = std::move(weak_db)]() {
+    eb->runAfterDelay(
+        [weak_db = std::move(weak_db)] {
+          auto db = weak_db.lock();
+          if (db == nullptr) {
+            return;
+          }
+          db->pullFromUpstream();
+        },
+        FLAGS_replicator_pull_delay_on_error_ms);
   });
 }
 
@@ -875,25 +855,7 @@ const service_router::ClientOption ReplicationDB::getClientOption() {
   option.setProtocol(service_router::ServerProtocol::THRIFT);
   option.setMaxConnPerServer(FLAGS_replication_max_conn_per_server);
   option.setShardId(shard_id_);
-  return option;
-}
-
-const service_router::ClientOption ReplicationDB::getClientOption(int64_t node_hash) {
-  service_router::ServerAddress target_address;
-  clients_.withRLock([node_hash, &target_address](auto& clients) {
-    if (clients.find(node_hash) != clients.end()) {
-      std::string host;
-      uint16_t port = 0;
-      folly::split(':', clients.at(node_hash), host, port);
-      target_address.setHost(host);
-      target_address.setPort(port);
-    }
-  });
-  service_router::ClientOption option;
-  option.setServiceName(replicator_service_name_);
-  option.setProtocol(service_router::ServerProtocol::THRIFT);
-  option.setMaxConnPerServer(FLAGS_replication_max_conn_per_server);
-  option.setTargetServerAddress(target_address);
+  src_dc_.withRLock([&option](auto& dc) { option.setDc(dc); });
   return option;
 }
 
@@ -908,9 +870,8 @@ void ReplicationDB::getUpdates(ReplicateResponse* response, std::unique_ptr<::la
   }
 
   std::string& client_address = request->client_address;
-  clients_.withWLock([&client_address, node_hash = request->node_hash ](auto & clients) {
-                                                                         clients[node_hash] = client_address;
-                                                                       });
+  clients_.withWLock(
+      [&client_address, node_hash = request->node_hash](auto& clients) { clients[node_hash] = client_address; });
   const auto expected_seq_no = request->seq_no + 1;
   std::unique_ptr<rocksdb::TransactionLogIterator> iter;
   auto cache_iter = getCachedIter(expected_seq_no, request->node_hash);
@@ -971,11 +932,11 @@ void ReplicationDB::handleReplicateRequest(
   std::weak_ptr<ReplicationDB> weak_db = db;
   auto seq_no = static_cast<rocksdb::SequenceNumber>(request->seq_no);
   auto timeout = request->max_wait_ms;
-  VLOG(5) << "handle replication request, hash:" << request->db_hash
-          << " from:" << request->client_address << " seq_no:" << request->seq_no;
+  VLOG(5) << "handle replication request, hash:" << request->db_hash << " from:" << request->client_address
+          << " seq_no:" << request->seq_no;
 
-  auto response_callback =
-      [ request = std::move(request), callback = std::move(callback), weak_db = std::move(weak_db) ]() mutable {
+  auto response_callback = [request = std::move(request), callback = std::move(callback),
+                            weak_db = std::move(weak_db)]() mutable {
     auto db = weak_db.lock();
     if (db == nullptr) {
       LaserException ex = createLaserException(Status::RP_SOURCE_DB_REMOVED,
@@ -997,15 +958,12 @@ void ReplicationDB::handleReplicateRequest(
       db->getUpdates(&response, std::move(request));
       response.set_timestamp(static_cast<int64_t>(common::currentTimeInMs()));
       callback->result(std::move(response));
-    }
-    catch (const LaserException& ex) {
+    } catch (const LaserException& ex) {
       callback->exception(std::move(ex));
     }
   };
 
-  auto predicate = [ seq_no, db = std::move(db) ]() {
-    return db->db_->GetLatestSequenceNumber() > seq_no;
-  };
+  auto predicate = [seq_no, db = std::move(db)]() { return db->db_->GetLatestSequenceNumber() > seq_no; };
   cond_var_->runIfConditionOrWaitForNotify(std::move(response_callback), std::move(predicate), timeout);
 }
 
@@ -1027,8 +985,8 @@ void ReplicationDB::handleReplicateWdtRequest(
     if (!boost::filesystem::exists(bpath)) {
       Status status = checkpoint(common::pathJoin(data_dir_, "checkpoint"));
       if (status != Status::OK) {
-        LaserException ex = createLaserException(status,
-            folly::to<std::string>("Db checkpoint fail, db_hash:", request->db_hash));
+        LaserException ex =
+            createLaserException(status, folly::to<std::string>("Db checkpoint fail, db_hash:", request->db_hash));
         callback->exception(std::move(ex));
         return;
       }
@@ -1036,19 +994,19 @@ void ReplicationDB::handleReplicateWdtRequest(
     checkpoint_ref_count_++;
   }
 
-  LOG(INFO) << "Create sender for db:" << request->db_hash
-            << " version:" << request->version << " wdt_url:" << request->wdt_url;
+  LOG(INFO) << "Create sender for db:" << request->db_hash << " version:" << request->version
+            << " wdt_url:" << request->wdt_url;
   auto wdt = std::make_shared<laser::WdtReplicator>(wdt_manager_, folly::to<std::string>(request->db_hash),
                                                     folly::to<std::string>(request->db_hash),
                                                     FLAGS_wdt_replicator_abort_timeout_ms);
   std::weak_ptr<ReplicationDB> weak_db = shared_from_this();
 
-  auto sender_callback = [weak_db, bpath, callback = std::move(callback)](std::string& name_space,
-       std::string& ident,  facebook::wdt::ErrorCode error) mutable {
+  auto sender_callback = [weak_db, bpath, callback = std::move(callback)](std::string& name_space, std::string& ident,
+                                                                          facebook::wdt::ErrorCode error) mutable {
     auto db = weak_db.lock();
     if (!db) {
-      LaserException ex = createLaserException(Status::RP_SOURCE_DB_REMOVED,
-                                               folly::to<std::string>("Db has been removed"));
+      LaserException ex =
+          createLaserException(Status::RP_SOURCE_DB_REMOVED, folly::to<std::string>("Db has been removed"));
       callback->exception(std::move(ex));
       return;
     }
@@ -1059,14 +1017,14 @@ void ReplicationDB::handleReplicateWdtRequest(
       try {
         boost::filesystem::remove_all(bpath);
         VLOG(5) << "Remove db checkpoint, db_hash:" << db->db_hash_;
-      } catch(...) {
-        LOG(ERROR) << "Remove db checkpoint fail, db_hash:" << db->db_hash_
-                   << " path:" << bpath.string();
+      } catch (...) {
+        LOG(ERROR) << "Remove db checkpoint fail, db_hash:" << db->db_hash_ << " path:" << bpath.string();
       }
     }
 
     if (error != facebook::wdt::ErrorCode::OK) {
-      LaserException ex = createLaserException(Status::RP_SOURCE_READ_ERROR,
+      LaserException ex = createLaserException(
+          Status::RP_SOURCE_READ_ERROR,
           folly::to<std::string>("Db ", db->db_hash_, " send file fail, error", facebook::wdt::errorCodeToStr(error)));
       callback->exception(std::move(ex));
     } else {
@@ -1103,27 +1061,25 @@ int64_t ReplicationDB::getIterHash(int64_t seq_no, int64_t node_hash) {
 
 std::unique_ptr<rocksdb::TransactionLogIterator> ReplicationDB::getCachedIter(int64_t seq_no, int64_t node_hash) {
   int64_t hash_key = getIterHash(seq_no, node_hash);
-  return cached_iters_.withWLock([hash_key, node_hash, seq_no](auto& iters)
-      -> std::unique_ptr<rocksdb::TransactionLogIterator> {
-    auto iter = iters.find(hash_key);
-    if (iter == iters.end()) {
-      VLOG(5) << "Find cache iter fail, seq_no:" << seq_no
-              << " node hash:" << node_hash;
-      return nullptr;
-    }
+  return cached_iters_.withWLock(
+      [hash_key, node_hash, seq_no](auto& iters) -> std::unique_ptr<rocksdb::TransactionLogIterator> {
+        auto iter = iters.find(hash_key);
+        if (iter == iters.end()) {
+          VLOG(5) << "Find cache iter fail, seq_no:" << seq_no << " node hash:" << node_hash;
+          return nullptr;
+        }
 
-    auto ret = std::move(iter->second.first);
-    iters.erase(hash_key);
-    if (ret && !ret->Valid()) {
-      ret->Next();
-      if (!ret->Valid()) {
-        ret.reset(nullptr);
-        VLOG(5) << "Find cache iter, seq_no:" << seq_no
-                << " node hash:" << node_hash << " is invalid";
-      }
-    }
-    return ret;
-  });
+        auto ret = std::move(iter->second.first);
+        iters.erase(hash_key);
+        if (ret && !ret->Valid()) {
+          ret->Next();
+          if (!ret->Valid()) {
+            ret.reset(nullptr);
+            VLOG(5) << "Find cache iter, seq_no:" << seq_no << " node hash:" << node_hash << " is invalid";
+          }
+        }
+        return ret;
+      });
 }
 
 void ReplicationDB::putCachedIter(int64_t seq_no, int64_t node_hash,
@@ -1148,19 +1104,16 @@ void ReplicationDB::cleanIdleCachedIters() {
   });
   auto eb = executor_->getEventBase();
   std::weak_ptr<ReplicationDB> weak_db = shared_from_this();
-  eb->runInEventBaseThread([
-    eb,
-    weak_db = std::move(weak_db)
-  ]() {
-    eb->runAfterDelay([
-      weak_db = std::move(weak_db)
-    ] {
-      auto db = weak_db.lock();
-      if (db == nullptr) {
-        return;
-      }
-      db->cleanIdleCachedIters();
-    }, FLAGS_replicator_idle_iter_timeout_ms);
+  eb->runInEventBaseThread([eb, weak_db = std::move(weak_db)]() {
+    eb->runAfterDelay(
+        [weak_db = std::move(weak_db)] {
+          auto db = weak_db.lock();
+          if (db == nullptr) {
+            return;
+          }
+          db->cleanIdleCachedIters();
+        },
+        FLAGS_replicator_idle_iter_timeout_ms);
   });
 }
 
@@ -1178,47 +1131,47 @@ uint64_t ReplicationDB::getProperty(const std::string& key) {
 
 void ReplicationDB::getPropertyKeys(std::vector<std::string>* keys) {
   std::vector<std::string> rocksdb_keys({
-    "rocksdb.num-immutable-mem-table",
-    "rocksdb.num-immutable-mem-table-flushed",
-    "rocksdb.mem-table-flush-pending",
-    "rocksdb.compaction-pending",
-    "rocksdb.background-errors",
-    "rocksdb.cur-size-active-mem-table",
-    "rocksdb.cur-size-all-mem-tables",
-    "rocksdb.size-all-mem-tables",
-    "rocksdb.num-entries-active-mem-table",
-    "rocksdb.num-entries-imm-mem-tables",
-    "rocksdb.num-deletes-active-mem-table",
-    "rocksdb.num-deletes-imm-mem-tables",
-    "rocksdb.estimate-num-keys",
-    "rocksdb.estimate-table-readers-mem",
-    "rocksdb.is-file-deletions-enabled",
-    "rocksdb.num-snapshots",
-    "rocksdb.oldest-snapshot-time",
-    "rocksdb.num-live-versions",
-    "rocksdb.current-super-version-number",
-    "rocksdb.estimate-live-data-size",
-    "rocksdb.min-log-number-to-keep",
-    "rocksdb.min-obsolete-sst-number-to-keep",
-    // WARNING: may slow down online queries if there are too many files.
-    // "rocksdb.total-sst-files-size",
-    "rocksdb.live-sst-files-size",
-    "rocksdb.base-level",
-    "rocksdb.estimate-pending-compaction-bytes",
-    "rocksdb.num-running-compactions",
-    "rocksdb.num-running-flushes",
-    "rocksdb.actual-delayed-write-rate",
-    "rocksdb.is-write-stopped",
-    "rocksdb.estimate-oldest-key-time",
-    "rocksdb.block-cache-capacity",
-    "rocksdb.block-cache-usage",
-    "rocksdb.block-cache-pinned-usage",
-    // custom properties
-    ROCKSDB_READ_BYTES_MIN_1,
-    ROCKSDB_WRITE_BYTES_MIN_1,
-    ROCKSDB_READ_KPS_MIN_1,
-    ROCKSDB_WRITE_KPS_MIN_1,
-    REPLICATION_DB_REPLICATOR_SEQUENCE_NO_DIFF,
+      "rocksdb.num-immutable-mem-table",
+      "rocksdb.num-immutable-mem-table-flushed",
+      "rocksdb.mem-table-flush-pending",
+      "rocksdb.compaction-pending",
+      "rocksdb.background-errors",
+      "rocksdb.cur-size-active-mem-table",
+      "rocksdb.cur-size-all-mem-tables",
+      "rocksdb.size-all-mem-tables",
+      "rocksdb.num-entries-active-mem-table",
+      "rocksdb.num-entries-imm-mem-tables",
+      "rocksdb.num-deletes-active-mem-table",
+      "rocksdb.num-deletes-imm-mem-tables",
+      "rocksdb.estimate-num-keys",
+      "rocksdb.estimate-table-readers-mem",
+      "rocksdb.is-file-deletions-enabled",
+      "rocksdb.num-snapshots",
+      "rocksdb.oldest-snapshot-time",
+      "rocksdb.num-live-versions",
+      "rocksdb.current-super-version-number",
+      "rocksdb.estimate-live-data-size",
+      "rocksdb.min-log-number-to-keep",
+      "rocksdb.min-obsolete-sst-number-to-keep",
+      // WARNING: may slow down online queries if there are too many files.
+      // "rocksdb.total-sst-files-size",
+      "rocksdb.live-sst-files-size",
+      "rocksdb.base-level",
+      "rocksdb.estimate-pending-compaction-bytes",
+      "rocksdb.num-running-compactions",
+      "rocksdb.num-running-flushes",
+      "rocksdb.actual-delayed-write-rate",
+      "rocksdb.is-write-stopped",
+      "rocksdb.estimate-oldest-key-time",
+      "rocksdb.block-cache-capacity",
+      "rocksdb.block-cache-usage",
+      "rocksdb.block-cache-pinned-usage",
+      // custom properties
+      ROCKSDB_READ_BYTES_MIN_1,
+      ROCKSDB_WRITE_BYTES_MIN_1,
+      ROCKSDB_READ_KPS_MIN_1,
+      ROCKSDB_WRITE_KPS_MIN_1,
+      REPLICATION_DB_REPLICATOR_SEQUENCE_NO_DIFF,
   });
 
   *keys = rocksdb_keys;

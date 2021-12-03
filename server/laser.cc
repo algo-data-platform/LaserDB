@@ -35,6 +35,7 @@
 DEFINE_string(service_name, "laser_dev", "Laser Server service name");
 DEFINE_string(replicator_service_name, "laser_dev_replicator", "Laser Server service name");
 DEFINE_string(group_name, "aliyun", "Laser cluster group name");
+DEFINE_string(dc, "default", "Laser cluster data center name");
 DEFINE_int32(node_id, 1, "Laser server node id");
 DEFINE_string(host, "127.0.0.1", "Laser server host");
 DEFINE_int32(port, 0, "Laser server port");
@@ -49,7 +50,7 @@ int main(int argc, char** argv) {
   // 配置管理、数据引擎管理
   // 必须在 database_manager 后面初始化
   auto config_manager = std::make_shared<laser::ConfigManager>(service_router::Router::getInstance());
-  auto database_manager = std::make_shared<laser::DatabaseManager>(config_manager, FLAGS_group_name, FLAGS_node_id);
+  auto database_manager = std::make_shared<laser::DatabaseManager>(config_manager, FLAGS_group_name, FLAGS_node_id, FLAGS_dc);
   database_manager->init(FLAGS_loader_thread_nums, FLAGS_replicator_service_name, FLAGS_host, FLAGS_replicator_port);
   config_manager->init(FLAGS_service_name, FLAGS_group_name, FLAGS_node_id);
 
@@ -67,6 +68,7 @@ int main(int argc, char** argv) {
       std::make_shared<laser::LaserService>(config_manager, database_manager);
   auto thrift_server_modifier = [](service_router::ThriftServer&) {};
   auto server_on_create = [database_manager](const service_router::Server& server) {
+      service_router::Router::getInstance()->setDc(server, FLAGS_dc);
     // 注册到 database manager 中用来控制服务状态等信息
     database_manager->setServiceServer(server);
   };

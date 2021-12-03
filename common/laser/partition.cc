@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "partition.h"
@@ -23,8 +24,8 @@
 namespace laser {
 
 PartitionManager::PartitionManager(std::shared_ptr<ConfigManager> config, const std::string& group_name,
-                                   uint32_t node_id)
-    : config_(config), group_name_(group_name), node_id_(node_id) {
+                                   uint32_t node_id, const std::string& node_dc)
+    : config_(config), group_name_(group_name), node_id_(node_id), node_dc_(node_dc) {
   config_->subscribe(group_name_, node_id_,
                      std::bind(&PartitionManager::updateShardList, this, std::placeholders::_1, std::placeholders::_2));
 }
@@ -38,6 +39,10 @@ void PartitionManager::updateShardList(const NodeShardList& list,
   follower_shard_list_.withWLock([&follower_shard_list, this](auto& list) { list = follower_shard_list; });
 
   for (auto& table : tables) {
+    if (node_dc_ != table.second->getDc() && node_dc_ != table.second->getDistDc()) {
+      LOG(INFO) << "dont't care this table:" << table.second->getTableName();
+      continue;
+    }
     if (list.getIsEdgeNode()) {
       std::string group_node_id = folly::to<std::string>(group_name_, "#", node_id_);
       auto bind_edge_nodes = table.second->getBindEdgeNodes();
@@ -46,21 +51,38 @@ void PartitionManager::updateShardList(const NodeShardList& list,
       }
     }
     uint32_t partition_number = table.second->getPartitionNumber();
+    bool is_migrate = (node_dc_ == table.second->getDistDc() && node_dc_ != table.second->getDc());
     for (int i = 0; i < partition_number; i++) {
       std::shared_ptr<Partition> new_partition =
           std::make_shared<Partition>(table.second->getDatabaseName(), table.second->getTableName(), i);
-      auto shard_id = getShardId(new_partition, config_);
-      if (!shard_id) {
-        LOG(INFO) << "Get shard id fail, table: " << *(table.second);
+      auto src_shard_id = getShardId(new_partition, config_, table.second->getDc());
+      if (!src_shard_id) {
+        LOG(INFO) << "Get src shard id fail, table: " << *(table.second);
         continue;
       }
-      new_partition->setShardId(shard_id.value());
-      if (std::find(leader_shard_list.begin(), leader_shard_list.end(), shard_id.value()) != leader_shard_list.end()) {
-        new_partition->setRole(DBRole::LEADER);
+      new_partition->setSrcShardId(src_shard_id.value());
+      new_partition->setDc(table.second->getDc());
+      uint32_t shard_id = src_shard_id.value();
+      if (is_migrate) {
+        auto dst_shard_id = getShardId(new_partition, config_, table.second->getDistDc());
+        if (!dst_shard_id) {
+          LOG(INFO) << "Get dist shard id fail, table: " << *(table.second);
+          continue;
+        }
+        new_partition->setShardId(dst_shard_id.value());
+        shard_id = dst_shard_id.value();
+      } else {
+        new_partition->setShardId(src_shard_id.value());
+      }
+      if (std::find(leader_shard_list.begin(), leader_shard_list.end(), shard_id) != leader_shard_list.end()) {
+        if (is_migrate) {
+          new_partition->setRole(DBRole::FOLLOWER);
+        } else {
+          new_partition->setRole(DBRole::LEADER);
+        }
         new_partitions.insert(new_partition);
       }
-      if (std::find(follower_shard_list.begin(), follower_shard_list.end(), shard_id.value()) !=
-          follower_shard_list.end()) {
+      if (std::find(follower_shard_list.begin(), follower_shard_list.end(), shard_id) != follower_shard_list.end()) {
         new_partition->setRole(DBRole::FOLLOWER);
         new_partitions.insert(new_partition);
       }
@@ -79,14 +101,21 @@ void PartitionManager::updateShardList(const NodeShardList& list,
 
     // 检查 role 是否变更
     std::unordered_map<int64_t, DBRole> partition_roles;
+    std::unordered_map<int64_t, std::string> partition_dcs;
     for (auto& partition : partitions) {
       partition_roles[partition->getPartitionHash()] = partition->getRole();
+      partition_dcs[partition->getPartitionHash()] = partition->getDc();
     }
     for (auto& partition : new_partitions) {
       int64_t hash = partition->getPartitionHash();
-      if (partition_roles.find(hash) != partition_roles.end() && partition_roles[hash] != partition->getRole()) {
-        VLOG(5) << "Partition:" << partition << " role has change.";
-        mount_partitions.insert(partition);
+      if (partition_roles.find(hash) != partition_roles.end()) {
+        if (partition_roles[hash] != partition->getRole()) {
+          VLOG(5) << "Partition:" << partition << " role has changed";
+          mount_partitions.insert(partition);
+        } else if (partition_dcs[hash] != partition->getDc()) {
+          LOG(INFO) << "Partition:" << partition << " dc has changed";
+          mount_partitions.insert(partition);
+        }
       }
     }
     partitions = new_partitions;

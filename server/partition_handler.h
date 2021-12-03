@@ -15,20 +15,21 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
 
+#include "folly/ProducerConsumerQueue.h"
 #include "folly/SpinLock.h"
 #include "folly/Synchronized.h"
-#include "folly/ProducerConsumerQueue.h"
 #include "folly/io/async/AsyncTimeout.h"
 
 #include "common/laser/partition.h"
 #include "common/laser/versioned_options.h"
-#include "engine/rocksdb.h"
 #include "database_meta_info.h"
 #include "engine/replicator_manager.h"
+#include "engine/rocksdb.h"
 
 namespace laser {
 
@@ -85,6 +86,20 @@ class PartitionHandler : public std::enable_shared_from_this<PartitionHandler> {
       auto db = weak_db.lock();
       if (db) {
         db->changeRole(partition->getRole());
+      }
+    }
+    if (partition->getDc() != partition_->getDc() && db_) {
+      auto weak_db = db_->getReplicationDB();
+      auto db = weak_db.lock();
+      if (db) {
+        db->changeSrcDc(partition->getDc());
+      }
+    }
+    if (partition->getSrcShardId() != partition_->getSrcShardId() && db_) {
+      auto weak_db = db_->getReplicationDB();
+      auto db = weak_db.lock();
+      if (db) {
+        db->changeShardId(partition->getSrcShardId());
       }
     }
     partition_ = partition;

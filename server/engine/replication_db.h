@@ -15,27 +15,29 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
 
+#include <atomic>
 #include <fstream>
 
-#include "rocksdb/db.h"
-#include "rocksdb/status.h"
-#include "rocksdb/slice.h"
-#include "rocksdb/table.h"
-#include "rocksdb/filter_policy.h"
-#include "rocksdb/utilities/checkpoint.h"
-#include "folly/SpinLock.h"
 #include "folly/Function.h"
+#include "folly/SpinLock.h"
+#include "rocksdb/db.h"
+#include "rocksdb/filter_policy.h"
+#include "rocksdb/slice.h"
+#include "rocksdb/status.h"
+#include "rocksdb/table.h"
+#include "rocksdb/utilities/checkpoint.h"
 
-#include "common/laser/laser_entity.h"
 #include "common/laser/format.h"
 #include "common/laser/if/gen-cpp2/Replicator.h"
 #include "common/laser/if/gen-cpp2/laser_types.h"
-#include "common/service_router/thrift.h"
+#include "common/laser/laser_entity.h"
 #include "common/metrics/metrics.h"
+#include "common/service_router/thrift.h"
 
 #include "wdt_replicator.h"
 
@@ -77,15 +79,14 @@ class ExecutorWithTimeout {
 
     if (timeout_ms > 0) {
       std::weak_ptr<Task> weak_task(task);
-      folly::futures::sleep(std::chrono::milliseconds(timeout_ms)).via(folly::getGlobalCPUExecutor()).thenValue([
-        weak_task = std::move(weak_task),
-        executor = executor_
-      ] (auto) {
-          auto task = weak_task.lock();
-          if (task && task->isDone()) {
-            executor->add(std::move(task->func));
-          }
-        });
+      folly::futures::sleep(std::chrono::milliseconds(timeout_ms))
+          .via(folly::getGlobalCPUExecutor())
+          .thenValue([weak_task = std::move(weak_task), executor = executor_](auto) {
+            auto task = weak_task.lock();
+            if (task && task->isDone()) {
+              executor->add(std::move(task->func));
+            }
+          });
     }
   }
 
@@ -103,8 +104,7 @@ class ExecutorWithTimeout {
  private:
   struct Task {
     template <typename Func>
-    explicit Task(Func&& f)
-        : func(std::move(f)), next(), has_done(false) {}
+    explicit Task(Func&& f) : func(std::move(f)), next(), has_done(false) {}
     bool isDone() { return !has_done.exchange(true); }
 
     folly::Function<void()> func;
@@ -145,7 +145,7 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
  public:
   ReplicationDB(const std::string& data_dir, const rocksdb::Options& options);
   virtual ~ReplicationDB() {
-    for (auto &meter : custom_properties_meters_) {
+    for (auto& meter : custom_properties_meters_) {
       meter.second->stop();
     }
     close();
@@ -167,12 +167,8 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
   virtual Status checkpoint(const std::string& checkpoint_path);
   virtual Status compactRange();
   virtual void iterator(IteratorCallback callback);
-  virtual inline void setWriteOption(const rocksdb::WriteOptions& options) {
-    default_write_options_ = options;
-  }
-  virtual inline void setReadOption(const rocksdb::ReadOptions& options) {
-    default_read_options_ = options;
-  }
+  virtual inline void setWriteOption(const rocksdb::WriteOptions& options) { default_write_options_ = options; }
+  virtual inline void setReadOption(const rocksdb::ReadOptions& options) { default_read_options_ = options; }
   virtual uint64_t getProperty(const std::string& key);
   static void getPropertyKeys(std::vector<std::string>* keys);
 
@@ -180,8 +176,10 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
   virtual void startReplicator(uint32_t shard_id, int64_t db_hash, const std::string& service_name,
                                std::shared_ptr<folly::IOExecutor> executor, const DBRole& role,
                                const std::string& version, int64_t node_hash, const std::string& client_address,
-                               std::shared_ptr<WdtReplicatorManager> wdt_manager);
+                               std::shared_ptr<WdtReplicatorManager> wdt_manager, const std::string& src_dc);
+  virtual void changeShardId(uint32_t shard_id);
   virtual void changeRole(const DBRole& role);
+  virtual void changeSrcDc(const std::string& dc);
   virtual void setUpdateVersionCallback(UpdateVersionCallback callback) {
     update_version_callback_ = std::move(callback);
   }
@@ -202,7 +200,7 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
   rocksdb::WriteOptions default_write_options_;
   rocksdb::ReadOptions default_read_options_;
 
-  uint32_t shard_id_;
+  std::atomic<uint32_t> shard_id_;
   int64_t db_hash_;
   std::string replicator_service_name_;
   std::shared_ptr<folly::IOExecutor> executor_;
@@ -211,6 +209,7 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
   std::string version_;
   DBRole role_{DBRole::LEADER};
   int64_t node_hash_;
+  folly::Synchronized<std::string> src_dc_;
   std::string client_address_;
   UpdateVersionCallback update_version_callback_;
   std::atomic<int64_t> leader_max_seq_no_{0};
@@ -251,7 +250,6 @@ class ReplicationDB : public std::enable_shared_from_this<ReplicationDB> {
   virtual bool reachMaxSeqNoDiffLimit(const laser::ReplicateResponse& response);
   virtual void getUpdates(ReplicateResponse* response, std::unique_ptr<::laser::ReplicateRequest> request);
   virtual const service_router::ClientOption getClientOption();
-  virtual const service_router::ClientOption getClientOption(int64_t node_hash);
   virtual const Status convertRocksDbStatus(const rocksdb::Status& status);
   virtual Status writeWithSeqNumber(rocksdb::WriteBatch& write_batch, int64_t* seq_no, int64_t write_ms);  // NOLINT
   virtual int64_t getIterHash(int64_t seq_no, int64_t node_hash);

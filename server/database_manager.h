@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
@@ -23,17 +24,17 @@
 #include "folly/executors/CPUThreadPoolExecutor.h"
 #include "folly/io/async/AsyncTimeout.h"
 
-#include "common/service_router/router.h"
 #include "common/laser/partition.h"
 #include "common/laser/rocksdb_config_factory.h"
 #include "common/metrics/metrics.h"
+#include "common/service_router/router.h"
 
-#include "datapath_manager.h"
-#include "table_monitor.h"
-#include "partition_handler.h"
 #include "database_meta_info.h"
+#include "datapath_manager.h"
 #include "engine/replicator_manager.h"
 #include "engine/wdt_replicator.h"
+#include "partition_handler.h"
+#include "table_monitor.h"
 
 namespace laser {
 
@@ -46,8 +47,9 @@ class DatabaseManagerTimerThread : public folly::ScopedEventBaseThread {
 // 一定要在 config manager 之前初始化, 进行设置订阅配置变更回调
 class DatabaseManager : public std::enable_shared_from_this<DatabaseManager> {
  public:
-  DatabaseManager(std::shared_ptr<ConfigManager> config_manager, const std::string& group_name, uint32_t node_id)
-      : config_manager_(config_manager), group_name_(group_name), node_id_(node_id) {}
+  DatabaseManager(std::shared_ptr<ConfigManager> config_manager, const std::string& group_name, uint32_t node_id,
+                  const std::string& node_dc)
+      : config_manager_(config_manager), group_name_(group_name), node_id_(node_id), node_dc_(node_dc) {}
   virtual ~DatabaseManager();
   virtual void init(uint32_t loader_thread_nums, const std::string& replicator_service_name,
                     const std::string& replicator_host, uint32_t replicator_port);
@@ -79,12 +81,14 @@ class DatabaseManager : public std::enable_shared_from_this<DatabaseManager> {
   virtual const std::string getReplicatorServiceName() { return replicator_service_name_; }
   virtual const std::string getReplicatorHost() { return replicator_host_; }
   virtual int64_t getNodeHash();
+  virtual const std::string getNodeDc() { return node_dc_; }
 
  private:
   std::shared_ptr<ConfigManager> config_manager_;
   service_router::Server api_server_;
   std::string group_name_;
   uint32_t node_id_;
+  std::string node_dc_;
   std::string replicator_service_name_;
   std::string replicator_host_;
   folly::SaturatingSemaphore<true> semaphore_;

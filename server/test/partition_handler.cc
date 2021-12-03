@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "gtest/gtest.h"
@@ -26,8 +27,8 @@
 
 class MockDatabaseManager : public laser::DatabaseManager {
  public:
-  MockDatabaseManager(const std::string& group_name, uint32_t node_id)
-      : laser::DatabaseManager(nullptr, group_name, node_id) {}
+  MockDatabaseManager(const std::string& group_name, uint32_t node_id, const std::string& dc)
+      : laser::DatabaseManager(nullptr, group_name, node_id, dc) {}
   MOCK_METHOD0(createRocksDbConfigFactory, std::shared_ptr<laser::RocksDbConfigFactory>());
   MOCK_METHOD0(getRocksdbConfigFactory, std::shared_ptr<laser::RocksDbConfigFactory>());
 };
@@ -76,8 +77,8 @@ class MockRocksDbEngine : public laser::RocksDbEngine {
 class MockReplicatorManager : public laser::ReplicatorManager {
  public:
   MockReplicatorManager() : laser::ReplicatorManager() {}
-  MOCK_METHOD6(addDB, void(const laser::DBRole&, uint32_t, int64_t, const std::string&,
-                           std::shared_ptr<laser::WdtReplicatorManager>, std::weak_ptr<laser::ReplicationDB>));
+  MOCK_METHOD7(addDB, void(const laser::DBRole&, uint32_t, int64_t, const std::string&,
+                           std::shared_ptr<laser::WdtReplicatorManager>, std::weak_ptr<laser::ReplicationDB>, const std::string&));
 };
 
 class MockDatabaseMetaInfo : public laser::DatabaseMetaInfo {
@@ -122,7 +123,7 @@ class PartitionHandlerTest : public ::testing::Test {
   PartitionHandlerTest() {
     folly::SingletonVault::singleton()->registrationComplete();
     partition_ = std::make_shared<laser::Partition>(database_name_, table_name_, part_id_);
-    database_manager_ = std::make_shared<MockDatabaseManager>(group_name_, node_id_);
+    database_manager_ = std::make_shared<MockDatabaseManager>(group_name_, node_id_, dc_);
     rocksdb_config_factory_ = std::make_shared<MockRocksDbConfigFactory>();
     database_meta_info_ = std::make_shared<MockDatabaseMetaInfo>();
     replicator_manager_ = std::make_shared<MockReplicatorManager>();
@@ -163,6 +164,7 @@ class PartitionHandlerTest : public ::testing::Test {
   uint32_t queue_size_ = 2;
   std::string init_base_version_ = "20190216180723_5376625654628601422";
   std::string data_dir_ = "/tmp/partition_handler_unit_test";
+  std::string dc_ = "default";
 
   void initTest() {
     EXPECT_CALL(*database_manager_, createRocksDbConfigFactory())
@@ -186,7 +188,7 @@ class PartitionHandlerTest : public ::testing::Test {
         .Times(1)
         .WillOnce(::testing::DoAll(::testing::SetArgPointee<0>(rocksdb_), ::testing::Return(true)));
     EXPECT_CALL(*replicator_manager_, addDB(::testing::_, ::testing::_, ::testing::Eq(partition_->getPartitionHash()),
-                                            ::testing::Eq(init_base_version_), ::testing::_, ::testing::_))
+                                            ::testing::Eq(init_base_version_), ::testing::_, ::testing::_, ::testing::_))
         .Times(1);
     EXPECT_CALL(*database_meta_info_, updateVersion(::testing::_, ::testing::Eq(init_base_version_))).Times(1);
     EXPECT_CALL(*database_meta_info_, updateDeltaVersions(::testing::_, ::testing::_)).Times(1);
@@ -308,7 +310,7 @@ TEST_F(PartitionHandlerTest, loadBaseDataSuccess) {
 
   ingestBaseDataMock(load_base_version, 0);
   EXPECT_CALL(*replicator_manager_, addDB(::testing::_, ::testing::_, ::testing::Eq(partition_->getPartitionHash()),
-                                          ::testing::Eq(load_base_version), ::testing::_, ::testing::_))
+                                          ::testing::Eq(load_base_version), ::testing::_, ::testing::_, ::testing::_))
       .Times(1);
   EXPECT_CALL(*database_meta_info_, updateVersion(::testing::_, ::testing::Eq(load_base_version))).Times(1);
   EXPECT_CALL(*database_meta_info_, updateDeltaVersions(::testing::_, ::testing::_)).Times(1);
@@ -329,12 +331,12 @@ TEST_F(PartitionHandlerTest, loadBaseDataMultiVersion) {
   // 队列目前最大长度是3，所有如果同时操作4个以上就会直接扔掉，对于真实代码默认是10，
   // 出现并发 load base 的情况只有通过 http 接口频繁调用导致，系统自动调度 hdfs load base 一般情况下不会触发
   EXPECT_CALL(*replicator_manager_, addDB(::testing::_, ::testing::_, ::testing::Eq(partition_->getPartitionHash()),
-                                          ::testing::Eq(load_base_version_1), ::testing::_, ::testing::_))
+                                          ::testing::Eq(load_base_version_1), ::testing::_, ::testing::_, ::testing::_))
       .Times(1);
   EXPECT_CALL(*database_meta_info_, updateVersion(::testing::_, ::testing::Eq(load_base_version_1))).Times(1);
   EXPECT_CALL(*database_meta_info_, updateDeltaVersions(::testing::_, ::testing::_)).Times(2);
   EXPECT_CALL(*replicator_manager_, addDB(::testing::_, ::testing::_, ::testing::Eq(partition_->getPartitionHash()),
-                                          ::testing::Eq(load_base_version_2), ::testing::_, ::testing::_))
+                                          ::testing::Eq(load_base_version_2), ::testing::_, ::testing::_, ::testing::_))
       .Times(1);
   EXPECT_CALL(*database_meta_info_, updateVersion(::testing::_, ::testing::Eq(load_base_version_2))).Times(1);
   ingestBaseDataMock(load_base_version_1, 30);
@@ -402,7 +404,7 @@ TEST_F(PartitionHandlerTest, loadBaseAndDeltaDataMultiVersion) {
   // 先加载 base version1 --> delta -> base version2
   // 测试结果： base version2 将丢弃
   EXPECT_CALL(*replicator_manager_, addDB(::testing::_, ::testing::_, ::testing::Eq(partition_->getPartitionHash()),
-                                          ::testing::Eq(load_base_version_1), ::testing::_, ::testing::_))
+                                          ::testing::Eq(load_base_version_1), ::testing::_, ::testing::_, ::testing::_))
       .Times(1);
   EXPECT_CALL(*database_meta_info_, updateVersion(::testing::_, ::testing::Eq(load_base_version_1))).Times(1);
   EXPECT_CALL(*database_meta_info_, updateDeltaVersions(::testing::_, ::testing::_)).Times(2);

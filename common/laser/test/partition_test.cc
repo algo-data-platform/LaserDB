@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "gtest/gtest.h"
@@ -64,7 +65,7 @@ class MockConfigManager : public laser::ConfigManager {
   explicit MockConfigManager(const std::shared_ptr<service_router::Router> router) : laser::ConfigManager(router) {}
   MOCK_METHOD2(getTableSchema,
                folly::Optional<std::shared_ptr<laser::TableSchema>>(const std::string&, const std::string&));
-  MOCK_METHOD0(getShardNumber, folly::Optional<uint32_t>());
+  MOCK_METHOD1(getShardNumber, folly::Optional<uint32_t>(const std::string&));
   void subscribe(const std::string&, uint32_t, laser::NotifyDatabaseAndClusterUpdate callback) override {
     update_callback_ = std::move(callback);
   }
@@ -84,7 +85,7 @@ class PartitionManagerTest : public ::testing::Test {
   virtual ~PartitionManagerTest() = default;
   virtual void TearDown() {}
   virtual void SetUp() {
-    partition_manager_ = std::make_shared<laser::PartitionManager>(config_, group_name_, node_id_);
+    partition_manager_ = std::make_shared<laser::PartitionManager>(config_, group_name_, node_id_, dc_);
   }
 
  protected:
@@ -93,6 +94,7 @@ class PartitionManagerTest : public ::testing::Test {
   std::string database_name_ = "test";
   std::string table_name_ = "user";
   std::string group_name_ = "test_group";
+  std::string dc_ = "default";
   uint32_t node_id_ = 1;
 };
 
@@ -122,9 +124,9 @@ TEST_F(PartitionManagerTest, getShardId) {
 
   std::shared_ptr<laser::Partition> partition = std::make_shared<laser::Partition>(database_name_, table_name_, 12);
 
-  auto shard_id = laser::PartitionManager::getShardId(partition, config_);
+  auto shard_id = laser::PartitionManager::getShardId(partition, config_, dc_);
   EXPECT_EQ(3, shard_id.value());
-  auto shard_none = laser::PartitionManager::getShardId(partition, config_);
+  auto shard_none = laser::PartitionManager::getShardId(partition, config_, dc_);
   EXPECT_FALSE(shard_none.hasValue());
 }
 
@@ -153,7 +155,7 @@ TEST_F(PartitionManagerTest, updateShardList) {
   table->setPartitionNumber(10);
   std::unordered_map<uint64_t, std::shared_ptr<laser::TableSchema>> tables({{1, table}});
 
-  EXPECT_CALL(*config_, getShardNumber()).Times(10).WillRepeatedly(::testing::Return(folly::Optional<uint32_t>(10)));
+  EXPECT_CALL(*config_, getShardNumber(::testing::_)).Times(10).WillRepeatedly(::testing::Return(folly::Optional<uint32_t>(10)));
 
   partition_manager_->subscribe([this](const laser::PartitionPtrSet& mount_partitions,
                                        const laser::PartitionPtrSet& unmount_partitions) {
@@ -174,7 +176,7 @@ TEST_F(PartitionManagerTest, updateShardList) {
 
   // 增加和减少该 节点上的分片
   node_shard_list.setFollowerShardList({6, 7, 8, 9});
-  EXPECT_CALL(*config_, getShardNumber()).Times(10).WillRepeatedly(::testing::Return(folly::Optional<uint32_t>(10)));
+  EXPECT_CALL(*config_, getShardNumber(::testing::_)).Times(10).WillRepeatedly(::testing::Return(folly::Optional<uint32_t>(10)));
 
   partition_manager_->subscribe([this](const laser::PartitionPtrSet& mount_partitions,
                                        const laser::PartitionPtrSet& unmount_partitions) {

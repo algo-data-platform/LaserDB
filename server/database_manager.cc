@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "database_manager.h"
@@ -63,7 +64,7 @@ void DatabaseManager::init(uint32_t loader_thread_nums, const std::string& repli
 
   // init replicator manager
   replicator_manager_ = createReplicatorManager();
-  replicator_manager_->init(replicator_service_name, replicator_host, replicator_port, getNodeHash());
+  replicator_manager_->init(replicator_service_name, replicator_host, replicator_port, getNodeHash(), node_dc_);
 
   // init wdt replicator
   wdt_manager_ = createWdtReplicatorManager(FLAGS_wdt_replicator_manager_thread_nums);
@@ -83,7 +84,7 @@ std::shared_ptr<folly::CPUThreadPoolExecutor> DatabaseManager::createLoaderThrea
 }
 
 std::shared_ptr<PartitionManager> DatabaseManager::createPartitionManager() {
-  return std::make_shared<PartitionManager>(config_manager_, group_name_, node_id_);
+  return std::make_shared<PartitionManager>(config_manager_, group_name_, node_id_, node_dc_);
 }
 
 std::shared_ptr<hdfs::HdfsMonitorManager> DatabaseManager::createHdfsMonitorManager() {
@@ -141,6 +142,9 @@ void DatabaseManager::updatePartitions(const PartitionPtrSet& mount_partitions,
       if (partition->getRole() == DBRole::LEADER) {
         monitor->addPartition(partition->getPartitionId());
       }
+    }
+    if (partition_handler->getPartition()->getDc() != partition->getDc()) {
+      partition_handler->setPartition(partition);
     }
   }
 
@@ -573,8 +577,7 @@ double DatabaseManager::getMetricData(const std::string& database_name, const st
 }
 
 double DatabaseManager::getTableMountedPartitionNumberByRole(const std::string& database_name,
-                                                             const std::string& table_name,
-                                                             const DBRole& role) {
+                                                             const std::string& table_name, const DBRole& role) {
   auto table = config_manager_->getTableSchema(database_name, table_name);
   if (!table) {
     VLOG(5) << "Not exists database:" << database_name << " table:" << table_name;
@@ -618,9 +621,9 @@ void DatabaseManager::delaySetAvailable() {
                       << " seconds.";
           } else {
             db_manager->delaySetAvailable();
-            FB_LOG_EVERY_MS(WARNING, 2000) << "Restart a delay set available schedule. Has api server is: "
-                                           << db_manager->has_api_server_ << ", delay time: "
-                                           << FLAGS_delay_set_available_seconds << " seconds.";
+            FB_LOG_EVERY_MS(WARNING, 2000)
+                << "Restart a delay set available schedule. Has api server is: " << db_manager->has_api_server_
+                << ", delay time: " << FLAGS_delay_set_available_seconds << " seconds.";
           }
         },
         FLAGS_delay_set_available_seconds * 1000);

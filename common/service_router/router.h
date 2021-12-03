@@ -187,6 +187,8 @@ class Router {
 
   virtual void setIdc(const Server& server, const std::string& idc);
 
+  virtual void setDc(const Server& server, const std::string& dc);
+
   virtual void setShardList(const Server& server, const std::vector<uint32_t>& shard_list);
 
   virtual void setAvailableShardList(const Server& server, const std::vector<uint32_t>& shard_list);

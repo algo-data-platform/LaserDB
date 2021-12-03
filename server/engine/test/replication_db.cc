@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "gtest/gtest.h"
@@ -80,6 +81,7 @@ class ReplicationDBTest : public ::testing::Test {
   std::string data_dir_ = "/tmp/replication_db_unit_test/";
   std::shared_ptr<folly::IOThreadPoolExecutor> replicate_thread_pool_;
   std::shared_ptr<laser::WdtReplicatorManager> wdt_manager_;
+  std::string dc_ = "default";
 
   std::shared_ptr<MockReplicationDB> createDb(const laser::DBRole& role = laser::DBRole::LEADER) {
     int64_t db_hash = 0;
@@ -106,7 +108,7 @@ class ReplicationDBTest : public ::testing::Test {
 
     db->open();
     db->startReplicator(0, db_hash, "test_replicate", replicate_thread_pool_, role, version_, node_hash, client_address,
-                        wdt_manager_);
+                        wdt_manager_, dc_);
     return db;
   }
 

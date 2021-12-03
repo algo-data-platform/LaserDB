@@ -15,15 +15,16 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "boost/filesystem.hpp"
 
-#include "common/laser/status.h"
 #include "common/laser/if/gen-cpp2/ReplicatorAsyncClient.h"
+#include "common/laser/status.h"
 
-#include "partition_handler.h"
 #include "database_manager.h"
+#include "partition_handler.h"
 
 namespace laser {
 
@@ -83,7 +84,7 @@ void PartitionHandler::exchangeBaseVersion(std::shared_ptr<RocksDbEngine> db, co
   delta_versions_ = delta_versions;
   VLOG(5) << "Add db to replicator manager, partition:" << *partition_ << " version:" << version;
   replicator_manager_->addDB(partition_->getRole(), partition_->getShardId(), partition_->getPartitionHash(), version,
-                             wdt_manager_, db_->getReplicationDB());
+                             wdt_manager_, db_->getReplicationDB(), partition_->getDc());
   database_meta_info_->updateVersion(partition_, version);
   database_meta_info_->updateDeltaVersions(partition_, delta_versions_);
 }
@@ -111,8 +112,8 @@ bool PartitionHandler::removeExistingDataDir(std::string* data_dir, const std::s
     base_version = base_version_;
   }
   if (version == base_version) {
-    replicating_data_dir = common::pathJoin(DataPathManager::getDatabaseDataReplicatingDir(
-                                         database_manager_, partition_, version), "data");
+    replicating_data_dir = common::pathJoin(
+        DataPathManager::getDatabaseDataReplicatingDir(database_manager_, partition_, version), "data");
     std::string deleting_data_dir = DataPathManager::getDatabaseDataDeletingDir(database_manager_, partition_, version);
     boost::filesystem::path bdata(deleting_data_dir);
     if (boost::filesystem::exists(bdata)) {
@@ -124,8 +125,8 @@ bool PartitionHandler::removeExistingDataDir(std::string* data_dir, const std::s
       }
     }
   } else {
-    replicating_data_dir = common::pathJoin(DataPathManager::getDatabaseDataDir(
-                                         database_manager_, partition_, version), "data");
+    replicating_data_dir =
+        common::pathJoin(DataPathManager::getDatabaseDataDir(database_manager_, partition_, version), "data");
   }
 
   boost::filesystem::path bdata(replicating_data_dir);
@@ -163,8 +164,8 @@ void PartitionHandler::baseDataReplicate(const std::string& db_hash, const std::
                           bool base_data_replicate_success = false;
                           do {
                             if (error != facebook::wdt::ErrorCode::OK) {
-                              LOG(ERROR) << "Transfer receiver complete, db_hash:" << db_hash
-                                         << " version:" << version << " err:" << facebook::wdt::errorCodeToStr(error);
+                              LOG(ERROR) << "Transfer receiver complete, db_hash:" << db_hash << " version:" << version
+                                         << " err:" << facebook::wdt::errorCodeToStr(error);
                               break;
                             }
 
@@ -178,14 +179,11 @@ void PartitionHandler::baseDataReplicate(const std::string& db_hash, const std::
                                   partition_handler->syncDestoryRocksDbEngine(std::move(partition_handler->db_));
                                 }
                                 deleting_data_dir = DataPathManager::getDatabaseDataDeletingDir(
-                                                                  partition_handler->database_manager_,
-                                                                  partition_handler->partition_, version);
+                                    partition_handler->database_manager_, partition_handler->partition_, version);
                                 std::string data_dir = DataPathManager::getDatabaseDataDir(
-                                                                  partition_handler->database_manager_,
-                                                                  partition_handler->partition_, version);
+                                    partition_handler->database_manager_, partition_handler->partition_, version);
                                 std::string replicating_data_dir = DataPathManager::getDatabaseDataReplicatingDir(
-                                                                  partition_handler->database_manager_,
-                                                                  partition_handler->partition_, version);
+                                    partition_handler->database_manager_, partition_handler->partition_, version);
                                 boost::system::error_code ec;
                                 if (boost::filesystem::exists(data_dir)) {
                                   boost::filesystem::rename(data_dir, deleting_data_dir, ec);
@@ -198,9 +196,9 @@ void PartitionHandler::baseDataReplicate(const std::string& db_hash, const std::
 
                                 boost::filesystem::rename(replicating_data_dir, data_dir, ec);
                                 if (ec) {
-                                  LOG(ERROR) << "Rename from replicating_dir: " << replicating_data_dir << " to "
-                                             << data_dir << " failed! ErrorCode: " << ec.value()
-                                             << ", Message: " << ec.message();
+                                  LOG(ERROR)
+                                      << "Rename from replicating_dir: " << replicating_data_dir << " to " << data_dir
+                                      << " failed! ErrorCode: " << ec.value() << ", Message: " << ec.message();
                                   break;
                                 }
                               }
@@ -282,8 +280,9 @@ void PartitionHandler::notifyWdtSender(const std::string& connect_url, const std
 
   service_router::ClientOption option;
   option.setServiceName(database_manager_->getReplicatorServiceName());
+  option.setDc(partition_->getDc());
   option.setProtocol(service_router::ServerProtocol::THRIFT);
-  option.setShardId(partition_->getShardId());
+  option.setShardId(partition_->getSrcShardId());
   bool ret = service_router::thriftServiceCall<ReplicatorAsyncClient>(option, std::move(send_request));
   if (!ret) {
     wdt->abort();
@@ -594,8 +593,8 @@ void PartitionHandler::syncDestoryRocksDbEngine(std::shared_ptr<RocksDbEngine>&&
     FB_LOG_EVERY_MS(INFO, 1000) << "Partition " << *partition_ << " looping for other callers release db";
   }
   if (FLAGS_finish_rocksdb_processing_operation_time_ms > 0) {
-    LOG(INFO) << "Waiting for processing rocksdb operaion finish: "
-              << FLAGS_finish_rocksdb_processing_operation_time_ms << " ms";
+    LOG(INFO) << "Waiting for processing rocksdb operaion finish: " << FLAGS_finish_rocksdb_processing_operation_time_ms
+              << " ms";
     std::this_thread::sleep_for(std::chrono::milliseconds(FLAGS_finish_rocksdb_processing_operation_time_ms));
   }
   tmp_db->close();
@@ -626,24 +625,14 @@ bool PartitionHandler::reloadRocksDbEngine(const std::string& version, const std
   return loadRocksDbEngine(version, delta_versions);
 }
 
-uint64_t PartitionHandler::getPartitionSize() {
-  return getProperty(PARTITION_SIZE_PROPERTY);
-}
+uint64_t PartitionHandler::getPartitionSize() { return getProperty(PARTITION_SIZE_PROPERTY); }
 
-uint64_t PartitionHandler::getPartitionReadKps() {
-  return getProperty(ROCKSDB_READ_KPS_MIN_1);
-}
+uint64_t PartitionHandler::getPartitionReadKps() { return getProperty(ROCKSDB_READ_KPS_MIN_1); }
 
-uint64_t PartitionHandler::getPartitionWriteKps() {
-  return getProperty(ROCKSDB_WRITE_KPS_MIN_1);
-}
+uint64_t PartitionHandler::getPartitionWriteKps() { return getProperty(ROCKSDB_WRITE_KPS_MIN_1); }
 
-uint64_t PartitionHandler::getPartitionReadBytes() {
-  return getProperty(ROCKSDB_READ_BYTES_MIN_1);
-}
+uint64_t PartitionHandler::getPartitionReadBytes() { return getProperty(ROCKSDB_READ_BYTES_MIN_1); }
 
-uint64_t PartitionHandler::getPartitionWriteBytes() {
-  return getProperty(ROCKSDB_WRITE_BYTES_MIN_1);
-}
+uint64_t PartitionHandler::getPartitionWriteBytes() { return getProperty(ROCKSDB_WRITE_BYTES_MIN_1); }
 
 }  // namespace laser

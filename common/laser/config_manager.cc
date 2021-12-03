@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "config_manager.h"
@@ -205,8 +206,7 @@ void ConfigManager::updateDatabase(const std::string& value) {
   });
 }
 
-void ConfigManager::updateClusterInfo(const std::string& value, const std::string& group_name,
-                                      const uint32_t node_id) {
+void ConfigManager::updateClusterInfo(const std::string& value, const std::string& group_name, const uint32_t node_id) {
   folly::dynamic dy_cluster_info;
   if (!common::fromJson(&dy_cluster_info, value)) {
     LOG(ERROR) << "Json parse is fail, cluster info config:" << value;
@@ -226,6 +226,9 @@ void ConfigManager::updateClusterInfo(const std::string& value, const std::strin
       uint64_t key = getNodeListHash(group.getGroupName(), node.getNodeId());
       node_shard_lists_.withWLock([key, &node](auto& node_shard_lists) { node_shard_lists[key] = node; });
     }
+  }
+  for (auto& dc : cluster_info.getDcs()) {
+    dcs_.withWLock([&dc](auto& dcs) { dcs[dc.getName()] = dc; });
   }
   cluster_info_ = std::make_shared<ClusterInfo>(cluster_info);
 }
@@ -372,6 +375,18 @@ void ConfigManager::upateDatabaseAndCluster() {
       subscribes->at(key)->notify(node_list.value(), *table_schemas);
     }
   }
+}
+
+folly::Optional<uint32_t> ConfigManager::getShardNumber(const std::string& dc) {
+  uint32_t shard_number;
+  bool ret = dcs_.withRLock([&dc, &shard_number](auto& dcs) {
+    auto it = dcs.find(dc);
+    if (it != dcs.end()) {
+      shard_number = it->second.getShardNumber();
+      return true;
+    }
+    return false;
+  });
 }
 
 }  // namespace laser

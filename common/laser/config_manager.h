@@ -15,12 +15,13 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
 
-#include "folly/Synchronized.h"
 #include "common/service_router/router.h"
+#include "folly/Synchronized.h"
 #include "laser_entity.h"
 
 namespace laser {
@@ -62,6 +63,8 @@ class ConfigManager {
 
     return folly::none;
   }
+
+  virtual folly::Optional<uint32_t> getShardNumber(const std::string& dc);
 
   virtual void updateConfig(const std::unordered_map<std::string, std::string>& configs, const std::string& group_name,
                             uint32_t node_id, bool config_from_service_router = true);
@@ -115,6 +118,7 @@ class ConfigManager {
   folly::Synchronized<std::shared_ptr<NodeConfig>> node_config_;
   folly::Synchronized<std::shared_ptr<TableConfigList>> table_config_list_;
   folly::Synchronized<TableTrafficRestrictionMap> traffic_restriction_config_;
+  folly::Synchronized<std::unordered_map<std::string, DataCenter>> dcs_;
   std::atomic_bool use_manually_set_config_;
   std::atomic_bool is_edge_node_;
 

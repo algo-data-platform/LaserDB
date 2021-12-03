@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
@@ -30,9 +31,11 @@ class ReplicatorManager : public std::enable_shared_from_this<ReplicatorManager>
  public:
   ReplicatorManager();
   virtual ~ReplicatorManager();
-  virtual void init(const std::string& service_name, const std::string& host, uint32_t port, int64_t node_hash);
+  virtual void init(const std::string& service_name, const std::string& host, uint32_t port, int64_t node_hash,
+                    const std::string& dc);
   virtual void addDB(const DBRole& role, uint32_t shard_id, int64_t db_hash, const std::string& version,
-                     std::shared_ptr<WdtReplicatorManager> wdt_manager, std::weak_ptr<ReplicationDB> db);
+                     std::shared_ptr<WdtReplicatorManager> wdt_manager, std::weak_ptr<ReplicationDB> db,
+                     const std::string& src_dc);
   virtual void removeDB(int64_t db_hash);
   virtual folly::Optional<std::weak_ptr<ReplicationDB>> getDB(int64_t db_hash);
   virtual void setShardList(const std::vector<uint32_t>& leader_shard_list,

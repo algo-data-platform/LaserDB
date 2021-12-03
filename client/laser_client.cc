@@ -378,7 +378,7 @@ bool LaserClient::getRouteInfo(uint32_t* shard_id, int64_t* partition_hash, bool
   uint32_t partition_id = laser::PartitionManager::getPartitionId(database_name, table_name, format_key,
                                                                   table_schema.value()->getPartitionNumber());
   auto partition = std::make_shared<laser::Partition>(database_name, table_name, partition_id);
-  auto op_shard_id = laser::PartitionManager::getShardId(partition, config_manager_);
+  auto op_shard_id = laser::PartitionManager::getShardId(partition, config_manager_, table_schema.value()->getDc());
   *shard_id = op_shard_id.hasValue() ? op_shard_id.value() : UINT32_MAX;
   *partition_hash = partition->getPartitionHash();
   if (*shard_id == UINT32_MAX || *partition_hash == 0) {

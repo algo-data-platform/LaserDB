@@ -15,6 +15,7 @@
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "gtest/gtest.h"
@@ -39,7 +40,7 @@ class MockRouter : public service_router::Router {
 class MockPartitionManager : public laser::PartitionManager {
  public:
   explicit MockPartitionManager(std::shared_ptr<laser::ConfigManager> config)
-      : laser::PartitionManager(config, "test", 1) {}
+      : laser::PartitionManager(config, "test", 1, "default") {}
   void subscribe(laser::NotifyPartitionUpdate notify) override { update_callback_ = std::move(notify); }
   MOCK_METHOD0(getLeaderShardList, const std::vector<uint32_t>());
   MOCK_METHOD0(getFollowerShardList, const std::vector<uint32_t>());
@@ -60,7 +61,7 @@ class MockPartitionHandler : public laser::PartitionHandler {
 class MockReplicatorManager : public laser::ReplicatorManager {
  public:
   MockReplicatorManager() : laser::ReplicatorManager() {}
-  MOCK_METHOD4(init, void(const std::string&, const std::string&, uint32_t, int64_t));
+  MOCK_METHOD5(init, void(const std::string&, const std::string&, uint32_t, int64_t, const std::string&));
   MOCK_METHOD2(setShardList, void(const std::vector<uint32_t>&, const std::vector<uint32_t>&));
 };
 
@@ -96,7 +97,7 @@ class MockTableMonitor : public laser::TableMonitor {
 class MockDatabaseManager : public laser::DatabaseManager {
  public:
   MockDatabaseManager(std::shared_ptr<MockConfigManager> config, const std::string& group_name, uint32_t node_id)
-      : laser::DatabaseManager(config, group_name, node_id) {
+      : laser::DatabaseManager(config, group_name, node_id, "default") {
     config_ = config;
   }
   MOCK_METHOD0(createPartitionManager, std::shared_ptr<laser::PartitionManager>());
@@ -143,7 +144,7 @@ class DatabaseManagerTest : public ::testing::Test {
     std::string host_name = "127.0.0.1";
     uint32_t port = 1111;
     EXPECT_CALL(*replicator_manager_,
-                init(::testing::Eq(replicator_name), ::testing::Eq(host_name), ::testing::Eq(port), ::testing::_))
+                init(::testing::Eq(replicator_name), ::testing::Eq(host_name), ::testing::Eq(port), ::testing::_, ::testing::_))
         .Times(1);
     database_manager_->init(1, replicator_name, host_name, port);
   }

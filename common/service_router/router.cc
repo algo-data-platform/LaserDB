@@ -386,6 +386,15 @@ void Router::setIdc(const Server& server, const std::string& idc) {
   });
 }
 
+void Router::setDc(const Server& server, const std::string& dc) {
+  std::string key = getServerKey(server);
+  servers_.withWLock([&](auto& servers) {
+    if (servers.find(key) != servers.end()) {
+      servers[key]->setDc(dc);
+    }
+  });
+}
+
 void Router::setShardList(const Server& server, const std::vector<uint32_t>& shard_list) {
   std::string key = getServerKey(server);
   servers_.withWLock([&](auto& servers) {
@@ -566,7 +575,6 @@ bool Router::unregisterServerSync(const Server server) {
   });
   return ret;
 }
-
 
 void Router::unregisterServer(const Server server) {
   servers_.withWLock([&](auto& servers) {

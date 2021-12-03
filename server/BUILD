@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
+# @author liubang <it.liubang@gmail.com>
 
 cc_library(
     name = "laser_server",
@@ -70,10 +71,6 @@ cc_binary(
     ],
     deps = [
         ":laser_server",
-    ],
-    linkopts = [
-        "-ldl",
-        "-static",
     ],
     copts = [
         "-Iexternal/double-conversion/",

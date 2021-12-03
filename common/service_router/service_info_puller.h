@@ -139,6 +139,7 @@ class ServerWithHeartbeat {
   void setStatus(const ServerStatus& status);
   inline void setWeight(int weight) { server_.setWeight(weight); }
   inline void setIdc(const std::string& idc) { server_.setIdc(idc); }
+  inline void setDc(const std::string& dc) { server_.setDc(dc); }
   inline void setShardList(const std::vector<uint32_t>& shard_list) { server_.setShardList(shard_list); }
   inline void setAvailableShardList(const std::vector<uint32_t>& shard_list) {
     server_.setAvailableShardList(shard_list);

@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #include "gtest/gtest.h"
@@ -23,8 +24,8 @@
 
 class MockDatabaseManager : public laser::DatabaseManager {
  public:
-  MockDatabaseManager(const std::string& group_name, uint32_t node_id)
-      : laser::DatabaseManager(nullptr, group_name, node_id) {}
+  MockDatabaseManager(const std::string& group_name, uint32_t node_id, const std::string& dc)
+      : laser::DatabaseManager(nullptr, group_name, node_id, dc) {}
 };
 
 namespace laser {
@@ -100,7 +101,8 @@ TEST_F(DataPathManagerTest, getDatabaseDataDir) {
   auto partition = std::make_shared<laser::Partition>(database_name_, table_name_, 2);
   std::string group_name = "test_group";
   uint32_t node_id = 1;
-  auto database_manager = std::make_shared<MockDatabaseManager>(group_name, node_id);
+  std::string dc = "default";
+  auto database_manager = std::make_shared<MockDatabaseManager>(group_name, node_id, dc);
 
   std::string ex_path = data_dir_ + "/data/" + group_name + "/" + folly::to<std::string>(node_id) + "/" +
                         database_name_ + "/" + table_name_ + "/2/" + base_version_;

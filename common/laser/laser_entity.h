@@ -16,6 +16,7 @@
  * @author ZhongXiu Hao <nmred.hao@gmail.com>
  * @author Deyun Yang <yangdeyunx@gmail.com>
  * @author Mingrui Zhang <zmr13140@gmail.com>
+ * @author liubang <it.liubang@gmail.com>
  */
 
 #pragma once
@@ -588,6 +589,14 @@ class TableSchema {
 
   bool deserialize(const folly::dynamic& data);
 
+  const std::string& getDc() const { return dc_; }
+
+  void setDc(const std::string& dc) { dc_ = dc; }
+
+  const std::string& getDistDc() const { return dist_dc_; }
+
+  void setDistDc(const std::string& dc) { dist_dc_ = dc; }
+
  private:
   std::string database_name_;
   std::string table_name_;
@@ -596,6 +605,8 @@ class TableSchema {
   std::string config_name_;
   std::vector<std::string> bind_edge_nodes_;
   int edge_flow_ratio_{0};
+  std::string dc_{"default"};
+  std::string dist_dc_{"default"};
 };
 
 std::ostream& operator<<(std::ostream& os, const TableSchema& value);
@@ -625,6 +636,23 @@ class DatabaseSchema {
 };
 
 std::ostream& operator<<(std::ostream& os, const DatabaseSchema& value);
+
+class DataCenter {
+    public:
+        DataCenter() = default;
+        ~DataCenter() = default;
+
+        const std::string& getName() const { return name_ ;}
+
+        void setName(const std::string& name) { name_ = name; }
+
+        uint32_t getShardNumber() const { return shard_number_; }
+
+        void setShardNumber(uint32_t shard_number) { shard_number_ = shard_number; }
+    private:
+        std::string name_;
+        uint32_t shard_number_;
+};
 
 class NodeShardList {
  public:
@@ -671,6 +699,10 @@ class ClusterGroup {
 
   void setGroupName(const std::string& group_name) { group_name_ = group_name; } 
 
+  const std::string& getDc() const { return dc_; }
+
+  void setDc(const std::string& dc) { dc_ = dc; }
+
   const std::vector<NodeShardList>& getNodes() const { return nodes_; } 
 
   void setNodes(const std::vector<NodeShardList>& nodes) { nodes_ = nodes; } 
@@ -683,6 +715,7 @@ class ClusterGroup {
 
  private:
   std::string group_name_;
+  std::string dc_{"default"};
   std::vector<NodeShardList> nodes_;
 };
 
@@ -705,6 +738,10 @@ class ClusterInfo {
 
   void setGroups(const std::vector<ClusterGroup>& groups) { groups_ = groups; } 
 
+  const std::vector<DataCenter>& getDcs() const { return dcs_; }
+
+  void setDcs(const std::vector<DataCenter>& dcs) { dcs_ = dcs; }
+
   void describe(std::ostream& os) const;
 
   const folly::dynamic serialize() const;
@@ -714,6 +751,7 @@ class ClusterInfo {
  private:
   std::string cluster_name_;
   uint32_t shard_number_;
+  std::vector<DataCenter> dcs_;
   std::vector<ClusterGroup> groups_;
 };
 
