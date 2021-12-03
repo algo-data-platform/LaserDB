@@ -1,0 +1,26 @@
+--- libaio-libaio-0.3.111.bak/Makefile	2019-10-12 17:46:40.000000000 +0800
++++ libaio-libaio-0.3.111/Makefile	2021-01-29 21:37:03.453090156 +0800
+@@ -4,9 +4,11 @@ VERSION=$(shell awk '/Version:/ { print
+ TAG = $(NAME)-$(VERSION)
+ RPMBUILD=$(shell `which rpmbuild >&/dev/null` && echo "rpmbuild" || echo "rpm")
+ 
+-prefix=/usr
+-includedir=$(prefix)/include
+-libdir=$(prefix)/lib
++ifeq ($(PREFIX),)
++PREFIX = /usr/local
++endif
++includedir=$(PREFIX)/include
++libdir=$(PREFIX)/lib
+ 
+ default: all
+ 
+@@ -14,7 +16,7 @@ all:
+ 	@$(MAKE) -C src
+ 
+ install:
+-	@$(MAKE) -C src install prefix=$(prefix) includedir=$(includedir) libdir=$(libdir)
++	@$(MAKE) -C src install prefix=$(PREFIX) includedir=$(includedir) libdir=$(libdir)
+ 
+ check:
+ 	@$(MAKE) -C harness check

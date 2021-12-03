@@ -1,0 +1,30 @@
+--- configure	2020-05-06 23:39:54.156690069 +0800
++++ liburing-liburing-0.6/configure	2020-05-06 23:40:57.021601025 +0800
+@@ -30,6 +30,8 @@ for opt do
+   ;;
+   --cc=*) cc="$optarg"
+   ;;
++  --compat=*) compat_h="$optarg"
++  ;;
+   *)
+     echo "ERROR: unkown option $opt"
+     echo "Try '$0 --help' for more information"
+@@ -56,6 +58,9 @@ fi
+ if test -z "$datadir"; then
+   datadir="$prefix/share"
+ fi
++if test -z "$compat_h"; then
++  compat_h="src/include/liburing/compat.h"
++fi
+ 
+ if test x"$libdir" = x"$libdevdir"; then
+   relativelibdir=""
+@@ -285,7 +290,7 @@ fi
+ echo "CC=$cc" >> $config_host_mak
+ 
+ # generate compat.h
+-compat_h="src/include/liburing/compat.h"
++# compat_h="src/include/liburing/compat.h"
+ cat > $compat_h << EOF
+ /* SPDX-License-Identifier: MIT */
+ #ifndef LIBURING_COMPAT_H

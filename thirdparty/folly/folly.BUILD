@@ -79,6 +79,7 @@ cc_library(
         "@//thirdparty/bzip2:bzip2",
         "@fmt//:fmt",
         "@snappy//:snappy",
+        "@libaio//:libaio",
         "@double-conversion//:double-conversion",
         "@com_github_google_glog//:glog",
         "@com_github_gflags_gflags//:gflags",
