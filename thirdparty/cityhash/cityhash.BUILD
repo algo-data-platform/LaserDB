@@ -16,17 +16,17 @@
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
 
 cc_library(
-  name = "cityhash",
-  srcs = [
-    "src/city.cc",
-    "config.h"
-  ],
-  hdrs = [
-    "src/city.h",
-    "src/citycrc.h",
-  ],
-  includes = [
-    "src"
-  ],
-  visibility = ["//visibility:public"],
+    name = "cityhash",
+    srcs = [
+        "config.h",
+        "src/city.cc",
+    ],
+    hdrs = [
+        "src/city.h",
+        "src/citycrc.h",
+    ],
+    includes = [
+        "src",
+    ],
+    visibility = ["//visibility:public"],
 )

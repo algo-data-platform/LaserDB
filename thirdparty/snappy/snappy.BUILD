@@ -16,22 +16,21 @@
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
 
 filegroup(
-  name = "snappy_header",
-  srcs = glob([
-    "*.h",
-  ]),
+    name = "snappy_header",
+    srcs = glob([
+        "*.h",
+    ]),
 )
 
 cc_library(
-  name = "snappy",
-  srcs = [
-    ":snappy_header",
-    "snappy-c.cc",
-    "snappy-sinksource.cc",
-    "snappy-stubs-internal.cc",
-    "snappy.cc",
-  ],
-  hdrs = ["snappy.h"],
-  visibility = ["//visibility:public"],
+    name = "snappy",
+    srcs = [
+        "snappy.cc",
+        "snappy-c.cc",
+        "snappy-sinksource.cc",
+        "snappy-stubs-internal.cc",
+        ":snappy_header",
+    ],
+    hdrs = ["snappy.h"],
+    visibility = ["//visibility:public"],
 )
-

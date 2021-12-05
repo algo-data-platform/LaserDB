@@ -16,22 +16,22 @@
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
 
 filegroup(
-  name = "fmt_header",
-  srcs = glob([
-    "include/**/*.h",
-  ]),
+    name = "fmt_header",
+    srcs = glob([
+        "include/**/*.h",
+    ]),
 )
 
 cc_library(
-  name = "fmt",
-  srcs = [
-    ":fmt_header",
-    "src/format.cc",
-    "src/os.cc",
-  ],
-  hdrs = [":fmt_header"],
-  includes = [
-    "include"
-  ],
-  visibility = ["//visibility:public"],
+    name = "fmt",
+    srcs = [
+        "src/format.cc",
+        "src/os.cc",
+        ":fmt_header",
+    ],
+    hdrs = [":fmt_header"],
+    includes = [
+        "include",
+    ],
+    visibility = ["//visibility:public"],
 )

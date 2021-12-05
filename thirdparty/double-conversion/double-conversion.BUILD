@@ -16,25 +16,24 @@
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
 
 filegroup(
-  name = "double_conversion_header",
-  srcs = glob([
-    "double-conversion/*.h",
-  ]),
+    name = "double_conversion_header",
+    srcs = glob([
+        "double-conversion/*.h",
+    ]),
 )
 
 filegroup(
-  name = "double_conversion_cc",
-  srcs = glob([
-    "double-conversion/*.cc",
-  ]),
+    name = "double_conversion_cc",
+    srcs = glob([
+        "double-conversion/*.cc",
+    ]),
 )
 
 cc_library(
-  name = "double-conversion",
-  srcs = [
-    ":double_conversion_cc",
-  ],
-  hdrs = [":double_conversion_header"],
-  visibility = ["//visibility:public"],
+    name = "double-conversion",
+    srcs = [
+        ":double_conversion_cc",
+    ],
+    hdrs = [":double_conversion_header"],
+    visibility = ["//visibility:public"],
 )
-

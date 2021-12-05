@@ -16,24 +16,24 @@
 # @author ZhongXiu Hao <nmred.hao@gmail.com>
 
 cc_library(
-  name = "laser_client",
-  srcs = [
-    "laser_client.cc",
-    "options.cc",
-  ],
-  hdrs = [
-    "laser_client.h",
-    "options.h",
-  ],
-  copts = [
-    "-Iexternal/double-conversion/",
-  ],
-  includes = [
-    "."
-  ],
-  deps=[
-    "@//common:liblaser",
-    "@//common:service_router",
-  ],
-  visibility = ["//visibility:public"],
+    name = "laser_client",
+    srcs = [
+        "laser_client.cc",
+        "options.cc",
+    ],
+    hdrs = [
+        "laser_client.h",
+        "options.h",
+    ],
+    copts = [
+        "-Iexternal/double-conversion/",
+    ],
+    includes = [
+        ".",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@//common:liblaser",
+        "@//common:service_router",
+    ],
 )

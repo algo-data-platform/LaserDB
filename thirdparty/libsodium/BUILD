@@ -20,12 +20,12 @@ load("@rules_foreign_cc//tools/build_defs:configure.bzl", "configure_make")
 configure_make(
     name = "libsodium",
     autogen = True,
+    autogen_env_vars = {
+        "DO_NOT_UPDATE_CONFIG_SCRIPTS": "1",
+    },
     configure_in_place = True,
     configure_options = [
     ],
-    autogen_env_vars = {
-      "DO_NOT_UPDATE_CONFIG_SCRIPTS" : "1"
-    },
     lib_source = "@libsodium//:all",
     static_libraries = ["libsodium.a"],
     visibility = ["//visibility:public"],

@@ -5,10 +5,10 @@ genrule(
     outs = [
         "src/include/liburing/compat.h",
     ],
+    cmd = "./$(location configure) --compat=$@",
     tools = [
         "configure",
     ],
-    cmd = "./$(location configure) --compat=$@",
 )
 
 cc_library(
@@ -17,12 +17,12 @@ cc_library(
         "src/syscall.h",
     ],
     hdrs = [
-        ":compat_h",
         "src/include/liburing.h",
         "src/include/liburing/barrier.h",
         "src/include/liburing/io_uring.h",
+        ":compat_h",
     ],
-    includes = ["src/include"],
     copts = ["-w"],
+    includes = ["src/include"],
     visibility = ["//visibility:public"],
 )

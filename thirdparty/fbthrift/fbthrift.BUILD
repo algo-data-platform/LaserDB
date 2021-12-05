@@ -25,13 +25,13 @@ cc_binary(
     srcs = [
         "thrift/compiler/generate/build_templates.cc",
     ],
-    deps = [
-        "@//thirdparty/boost:boost",
-    ],
-    linkstatic = 1,
     linkopts = [
         "-static-libstdc++",
         "-static-libgcc",
+    ],
+    linkstatic = 1,
+    deps = [
+        "@//thirdparty/boost:boost",
     ],
 )
 
@@ -40,10 +40,10 @@ genrule(
     srcs = [
         "thrift/compiler/generate/templates",
     ],
-    cmd = "$(location :compiler_generate_build_templates) $< > $@",
     outs = [
         "thrift/compiler/generate/templates.cc",
     ],
+    cmd = "$(location :compiler_generate_build_templates) $< > $@",
     exec_tools = [
         ":compiler_generate_build_templates",
     ],
@@ -60,19 +60,19 @@ cc_library(
     includes = [
         ".",
     ],
-    linkstatic = 1,
     linkopts = [
         "-static-libstdc++",
         "-static-libgcc",
     ],
+    linkstatic = 1,
 )
 
 genyacc(
     name = "parser",
+    src = "thrift/compiler/parse/thrifty.yy",
     extra_options = [
         "--skeleton=lalr1.cc",
     ],
-    src = "thrift/compiler/parse/thrifty.yy",
     header_out = "thrifty.hh",
     source_out = "thrifty.cc",
 )
@@ -86,12 +86,12 @@ genlex(
 cc_library(
     name = "compiler_ast",
     srcs = [
+        "thrift/compiler/ast/base_types.cc",
         "thrift/compiler/ast/t_program.cc",
+        "thrift/compiler/ast/t_scope.cc",
         "thrift/compiler/ast/t_struct.cc",
         "thrift/compiler/ast/t_type.cc",
         "thrift/compiler/ast/t_typedef.cc",
-        "thrift/compiler/ast/base_types.cc",
-        "thrift/compiler/ast/t_scope.cc",
     ],
     hdrs = glob([
         "thrift/compiler/*.h",
@@ -119,11 +119,11 @@ cc_library(
         "thrift/compiler/*.h",
         "thrift/compiler/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     defines = [
         'THRIFTY_HH=\\\"thrifty.hh\\\"',
+    ],
+    includes = [
+        ".",
     ],
     deps = [
         ":compiler_ast",
@@ -191,12 +191,12 @@ cc_library(
         ".",
     ],
     deps = [
+        ":compiler_base",
+        ":compiler_generate_templates",
+        ":compiler_lib",
+        ":mustache_lib",
         "@//thirdparty/boost:boost",
         "@//thirdparty/openssl:openssl",
-        ":compiler_base",
-        ":compiler_lib",
-        ":compiler_generate_templates",
-        ":mustache_lib",
     ],
     alwayslink = 1,
 )
@@ -204,62 +204,62 @@ cc_library(
 cc_binary(
     name = "thrift1",
     srcs = [
-        "thrift/compiler/main.cc",
+        "thrift/compiler/ast/visitor.cc",
         "thrift/compiler/compiler.cc",
+        "thrift/compiler/main.cc",
         "thrift/compiler/mutator/mutator.cc",
         "thrift/compiler/validator/diagnostic.cc",
         "thrift/compiler/validator/validator.cc",
-        "thrift/compiler/ast/visitor.cc",
     ],
     includes = [
         ".",
     ],
+    visibility = ["//visibility:public"],
     deps = [
-        "@//thirdparty/boost:boost",
         ":compiler_ast",
         ":compiler_base",
         ":compiler_generators",
+        "@//thirdparty/boost:boost",
     ],
-    visibility = ["//visibility:public"],
 )
 
 gen_fbthrift(
     name = "reflection",
     src = "thrift/lib/thrift/reflection.thrift",
-    output_path = "thrift/lib/thrift",
     options = "templates,no_metadata,include_prefix=thrift/lib/thrift",
+    output_path = "thrift/lib/thrift",
 )
 
 gen_fbthrift(
     name = "metadata",
     src = "thrift/lib/thrift/metadata.thrift",
+    options = "include_prefix=thrift/lib/thrift",
     output_path = "thrift/lib/thrift",
     service_list = [
         "ThriftMetadataService",
     ],
-    options = "include_prefix=thrift/lib/thrift",
 )
 
 gen_fbthrift(
     name = "frozen",
     src = "thrift/lib/thrift/frozen.thrift",
-    output_path = "thrift/lib/thrift",
     options = "include_prefix=thrift/lib/thrift",
+    output_path = "thrift/lib/thrift",
 )
 
 gen_fbthrift(
     name = "RpcMetadata",
     src = "thrift/lib/thrift/RpcMetadata.thrift",
-    output_path = "thrift/lib/thrift",
     options = "no_metadata,include_prefix=thrift/lib/thrift",
+    output_path = "thrift/lib/thrift",
 )
 
 cc_library(
     name = "thriftmetadata",
     srcs = [
-        ":metadata",
-        ":frozen",
         ":RpcMetadata",
+        ":frozen",
+        ":metadata",
     ],
     hdrs = glob([
         "thrift/lib/thrift/*.h",
@@ -267,50 +267,50 @@ cc_library(
         "thrift/lib/cpp/*.h",
         "thrift/lib/cpp/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@wangle//:wangle",
         "@double-conversion//:double-conversion",
+        "@folly",
+        "@wangle",
     ],
 )
 
 cc_library(
     name = "thriftfrozen2",
     srcs = [
-        ":frozen",
         "thrift/lib/cpp2/frozen/Frozen.cpp",
         "thrift/lib/cpp2/frozen/FrozenUtil.cpp",
         "thrift/lib/cpp2/frozen/schema/MemorySchema.cpp",
+        ":frozen",
     ],
     hdrs = glob([
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
         ":thriftmetadata",
-        "@folly//:folly",
-        "@double-conversion//:double-conversion",
-        "@com_github_google_glog//:glog",
         "@com_github_gflags_gflags//:gflags",
+        "@com_github_google_glog//:glog",
+        "@double-conversion//:double-conversion",
+        "@folly",
     ],
 )
 
 cc_library(
     name = "rpcmetadata",
     srcs = [
-        ":RpcMetadata",
         "thrift/lib/cpp2/gen/module_types_cpp.cpp",
+        ":RpcMetadata",
     ],
     hdrs = glob([
         "thrift/lib/cpp2/**/*.h",
@@ -326,9 +326,9 @@ cc_library(
         ".",
     ],
     deps = [
-        "@folly//:folly",
-        "@double-conversion//:double-conversion",
         ":thrift-core",
+        "@double-conversion//:double-conversion",
+        "@folly",
     ],
 )
 
@@ -339,8 +339,8 @@ cc_library(
         "thrift/lib/cpp2/protocol/CompactProtocol.cpp",
         "thrift/lib/cpp2/protocol/CompactV1Protocol.cpp",
         "thrift/lib/cpp2/protocol/DebugProtocol.cpp",
-        "thrift/lib/cpp2/protocol/JSONProtocolCommon.cpp",
         "thrift/lib/cpp2/protocol/JSONProtocol.cpp",
+        "thrift/lib/cpp2/protocol/JSONProtocolCommon.cpp",
         "thrift/lib/cpp2/protocol/Serializer.cpp",
         "thrift/lib/cpp2/protocol/VirtualProtocol.cpp",
     ],
@@ -350,17 +350,17 @@ cc_library(
         "thrift/lib/cpp/**/*.h",
         "thrift/lib/cpp/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@double-conversion//:double-conversion",
-        "@wangle//:wangle",
         ":thrift",
+        "@double-conversion//:double-conversion",
+        "@folly",
+        "@wangle",
     ],
 )
 
@@ -389,21 +389,21 @@ cc_library(
         "thrift/lib/cpp2/security/extensions/ThriftParametersClientExtension.cpp",
         "thrift/lib/cpp2/security/extensions/ThriftParametersContext.cpp",
         "thrift/lib/cpp2/security/extensions/Types.cpp",
-        "thrift/lib/cpp2/server/RequestDebugLog.cpp",
-        "thrift/lib/cpp2/server/RequestsRegistry.cpp",
         "thrift/lib/cpp2/server/BaseThriftServer.cpp",
         "thrift/lib/cpp2/server/Cpp2ConnContext.cpp",
         "thrift/lib/cpp2/server/Cpp2Connection.cpp",
         "thrift/lib/cpp2/server/Cpp2Worker.cpp",
         "thrift/lib/cpp2/server/LoggingEvent.cpp",
+        "thrift/lib/cpp2/server/RequestDebugLog.cpp",
+        "thrift/lib/cpp2/server/RequestsRegistry.cpp",
         "thrift/lib/cpp2/server/ServerInstrumentation.cpp",
         "thrift/lib/cpp2/server/ThriftServer.cpp",
         "thrift/lib/cpp2/server/peeking/TLSHelper.cpp",
         "thrift/lib/cpp2/transport/core/RpcMetadataUtil.cpp",
-        "thrift/lib/cpp2/transport/core/ThriftProcessor.cpp",
-        "thrift/lib/cpp2/transport/core/ThriftRequest.cpp",
         "thrift/lib/cpp2/transport/core/ThriftClient.cpp",
         "thrift/lib/cpp2/transport/core/ThriftClientCallback.cpp",
+        "thrift/lib/cpp2/transport/core/ThriftProcessor.cpp",
+        "thrift/lib/cpp2/transport/core/ThriftRequest.cpp",
         "thrift/lib/cpp2/transport/http2/client/H2ClientConnection.cpp",
         "thrift/lib/cpp2/transport/http2/client/ThriftTransactionHandler.cpp",
         "thrift/lib/cpp2/transport/http2/common/H2Channel.cpp",
@@ -445,19 +445,19 @@ cc_library(
     includes = [
         ".",
     ],
-    deps = [
-        "@folly//:folly",
-        "@wangle//:wangle",
-        "@double-conversion//:double-conversion",
-        "@//thirdparty/openssl:openssl",
-        "@proxygen//:proxygenhttpserver",
-        ":rpcmetadata",
-        ":thriftmetadata",
-        ":thriftfrozen2",
-        ":thriftprotocol",
-        ":thrift",
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        ":rpcmetadata",
+        ":thrift",
+        ":thriftfrozen2",
+        ":thriftmetadata",
+        ":thriftprotocol",
+        "@//thirdparty/openssl:openssl",
+        "@double-conversion//:double-conversion",
+        "@folly",
+        "@proxygen//:proxygenhttpserver",
+        "@wangle",
+    ],
 )
 
 cc_library(
@@ -472,24 +472,24 @@ cc_library(
         "thrift/lib/cpp2/*.h",
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@fmt//:fmt",
         "@double-conversion//:double-conversion",
+        "@fmt",
+        "@folly",
     ],
 )
 
 cc_library(
     name = "concurrency",
     srcs = [
-        "thrift/lib/cpp/concurrency/Mutex.cpp",
         "thrift/lib/cpp/concurrency/Monitor.cpp",
+        "thrift/lib/cpp/concurrency/Mutex.cpp",
         "thrift/lib/cpp/concurrency/PosixThreadFactory.cpp",
         "thrift/lib/cpp/concurrency/ThreadManager.cpp",
         "thrift/lib/cpp/concurrency/TimerManager.cpp",
@@ -501,26 +501,26 @@ cc_library(
         "thrift/lib/cpp2/*.h",
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@com_github_google_glog//:glog",
         "@com_github_gflags_gflags//:gflags",
+        "@com_github_google_glog//:glog",
         "@double-conversion//:double-conversion",
+        "@folly",
     ],
 )
 
 cc_library(
     name = "protocol",
     srcs = [
+        "thrift/lib/cpp/protocol/TBase64Utils.cpp",
         "thrift/lib/cpp/protocol/TDebugProtocol.cpp",
         "thrift/lib/cpp/protocol/TJSONProtocol.cpp",
-        "thrift/lib/cpp/protocol/TBase64Utils.cpp",
         "thrift/lib/cpp/protocol/TProtocolException.cpp",
         "thrift/lib/cpp/protocol/TSimpleJSONProtocol.cpp",
         ":reflection",
@@ -531,33 +531,33 @@ cc_library(
         "thrift/lib/cpp2/*.h",
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@fmt//:fmt",
-        "@com_github_google_glog//:glog",
-        "@com_github_gflags_gflags//:gflags",
-        "@double-conversion//:double-conversion",
         ":thrift-core",
+        "@com_github_gflags_gflags//:gflags",
+        "@com_github_google_glog//:glog",
+        "@double-conversion//:double-conversion",
+        "@fmt",
+        "@folly",
     ],
 )
 
 cc_library(
     name = "transport",
     srcs = [
-        "thrift/lib/cpp/transport/TTransportException.cpp",
+        "thrift/lib/cpp/transport/TBufferTransports.cpp",
         "thrift/lib/cpp/transport/TFDTransport.cpp",
-        "thrift/lib/cpp/transport/THttpTransport.cpp",
+        "thrift/lib/cpp/transport/THeader.cpp",
         "thrift/lib/cpp/transport/THttpClient.cpp",
         "thrift/lib/cpp/transport/THttpServer.cpp",
+        "thrift/lib/cpp/transport/THttpTransport.cpp",
         "thrift/lib/cpp/transport/TSocket.cpp",
-        "thrift/lib/cpp/transport/TBufferTransports.cpp",
-        "thrift/lib/cpp/transport/THeader.cpp",
+        "thrift/lib/cpp/transport/TTransportException.cpp",
         "thrift/lib/cpp/transport/TZlibTransport.cpp",
         "thrift/lib/cpp/util/PausableTimer.cpp",
         "thrift/lib/cpp/util/THttpParser.cpp",
@@ -569,21 +569,21 @@ cc_library(
         "thrift/lib/cpp2/*.h",
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@double-conversion//:double-conversion",
-        ":thrift-core",
         ":concurrency",
         ":rpcmetadata",
+        ":thrift-core",
         "@//thirdparty/openssl:openssl",
         "@//thirdparty/zlib:libz",
         "@//thirdparty/zstd:zstd",
+        "@double-conversion//:double-conversion",
+        "@folly",
     ],
 )
 
@@ -605,20 +605,20 @@ cc_library(
         "thrift/lib/cpp2/*.h",
         "thrift/lib/cpp2/**/*.h",
     ]),
-    includes = [
-        ".",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
+    includes = [
+        ".",
+    ],
     deps = [
-        "@folly//:folly",
-        "@double-conversion//:double-conversion",
-        "@com_github_google_glog//:glog",
-        "@//thirdparty/openssl:openssl",
-        "@//thirdparty/boost:boost",
         ":concurrency",
         ":transport",
+        "@//thirdparty/boost:boost",
+        "@//thirdparty/openssl:openssl",
+        "@com_github_google_glog//:glog",
+        "@double-conversion//:double-conversion",
+        "@folly",
     ],
 )
 
@@ -629,8 +629,8 @@ cc_library(
         ":concurrency",
         ":protocol",
         ":transport",
-        "@folly//:folly",
         "@com_github_google_glog//:glog",
+        "@folly",
     ],
 )
 

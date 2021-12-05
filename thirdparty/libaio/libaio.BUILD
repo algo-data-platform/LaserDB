@@ -9,9 +9,9 @@ filegroup(
 
 make(
     name = "libaio",
+    lib_source = ":all",
     static_libraries = [
         "libaio.a",
     ],
-    lib_source = ":all",
     visibility = ["//visibility:public"],
 )

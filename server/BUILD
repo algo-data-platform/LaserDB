@@ -22,10 +22,6 @@ cc_library(
         "database_manager.cc",
         "database_meta_info.cc",
         "datapath_manager.cc",
-        "http_service.cc",
-        "laser_service.cc",
-        "partition_handler.cc",
-        "table_monitor.cc",
         "engine/expire_filter.cc",
         "engine/replication_db.cc",
         "engine/replicator_manager.cc",
@@ -33,15 +29,15 @@ cc_library(
         "engine/rocksdb.cc",
         "engine/scoped_key_lock.cc",
         "engine/wdt_replicator.cc",
+        "http_service.cc",
+        "laser_service.cc",
+        "partition_handler.cc",
+        "table_monitor.cc",
     ],
     hdrs = [
         "database_manager.h",
         "database_meta_info.h",
         "datapath_manager.h",
-        "http_service.h",
-        "laser_service.h",
-        "partition_handler.h",
-        "table_monitor.h",
         "engine/expire_filter.h",
         "engine/replication_db.h",
         "engine/replicator_manager.h",
@@ -49,6 +45,10 @@ cc_library(
         "engine/rocksdb.h",
         "engine/scoped_key_lock.h",
         "engine/wdt_replicator.h",
+        "http_service.h",
+        "laser_service.h",
+        "partition_handler.h",
+        "table_monitor.h",
     ],
     copts = [
         "-Iexternal/double-conversion/",
@@ -57,10 +57,10 @@ cc_library(
         ".",
     ],
     deps = [
-        "@wdt//:wdt",
+        "@//common:hdfs",
         "@//common:liblaser",
         "@//common:service_router_http_server",
-        "@//common:hdfs",
+        "@wdt",
     ],
 )
 
@@ -69,11 +69,11 @@ cc_binary(
     srcs = [
         "laser.cc",
     ],
-    deps = [
-        ":laser_server",
-    ],
     copts = [
         "-Iexternal/double-conversion/",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        ":laser_server",
+    ],
 )

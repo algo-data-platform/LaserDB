@@ -18,8 +18,8 @@
 load("@rules_foreign_cc//tools/build_defs:make.bzl", "make")
 
 make(
-  name = "zstd",
-  lib_source = "@zstd//:all",
-  static_libraries = ["libzstd.a"],
-  visibility = ["//visibility:public"],
+    name = "zstd",
+    lib_source = "@zstd//:all",
+    static_libraries = ["libzstd.a"],
+    visibility = ["//visibility:public"],
 )

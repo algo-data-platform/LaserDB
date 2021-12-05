@@ -18,57 +18,57 @@
 load("@//thirdparty/tools:fbthrift.bzl", "gen_fbthrift")
 
 gen_fbthrift(
-  name = "geo",
-  src = "geo/if/geo.thrift",
-  output_path = "geo/if",
-  service_list = [
-    "GeoService",
-  ],
-  options = "templates,no_metadata",
+    name = "geo",
+    src = "geo/if/geo.thrift",
+    options = "templates,no_metadata",
+    output_path = "geo/if",
+    service_list = [
+        "GeoService",
+    ],
 )
 
 cc_binary(
-	name = "geo_server",
-	srcs=[
-		"geo/server/geo_service.h",
-		"geo/server/geo_service.cc",
-		"geo/server/geo_server.cc",
-    ":geo",
-	],
-	deps=[
-    "//common:util",
-    '//common:service_router_http_server',
-		'@fbthrift//:thriftcpp2',
-	],
-  includes = [
-    "."
-  ],
-  linkopts = [
-    '-ldl'
-  ],
-  copts = [
-    "-Iexternal/double-conversion/",
-  ],
+    name = "geo_server",
+    srcs = [
+        "geo/server/geo_server.cc",
+        "geo/server/geo_service.cc",
+        "geo/server/geo_service.h",
+        ":geo",
+    ],
+    copts = [
+        "-Iexternal/double-conversion/",
+    ],
+    includes = [
+        ".",
+    ],
+    linkopts = [
+        "-ldl",
+    ],
+    deps = [
+        "//common:service_router_http_server",
+        "//common:util",
+        "@fbthrift//:thriftcpp2",
+    ],
 )
 
 cc_binary(
-  name = "geo_client",
-  srcs = [
-    "geo/client/geo_client.cc",
-    ":geo",
-  ],
-  deps = [
-    "@folly//:folly",
-    "//common:service_router_http_server",
-		"@fbthrift//:thriftcpp2",
-  ],
-  includes = [
-    "."
-  ],
-  linkopts = [
-    '-ldl'
-  ],
-  copts = [
-    "-Iexternal/double-conversion/",
-  ],
+    name = "geo_client",
+    srcs = [
+        "geo/client/geo_client.cc",
+        ":geo",
+    ],
+    copts = [
+        "-Iexternal/double-conversion/",
+    ],
+    includes = [
+        ".",
+    ],
+    linkopts = [
+        "-ldl",
+    ],
+    deps = [
+        "//common:service_router_http_server",
+        "@fbthrift//:thriftcpp2",
+        "@folly",
+    ],
 )

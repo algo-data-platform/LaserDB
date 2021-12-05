@@ -17,12 +17,12 @@ go_library(
     importpath = "github.com/algo-data-platform/LaserDB/sdk/go/common/service_router",
     visibility = ["//visibility:public"],
     deps = [
-        "//sdk/go/common/ip:ip",
-        "@fbthrift//:fbthrift_go",
+        "//sdk/go/common/ip",
         "@com_github_hashicorp_consul//api:go_default_library",
         "@com_github_liubang_tally//:go_default_library",
         "@com_github_liubang_tally//prometheus:go_default_library",
         "@com_github_zentures_cityhash//:go_default_library",
+        "@fbthrift//:fbthrift_go",
         "@org_uber_go_atomic//:go_default_library",
     ],
 )

@@ -18,8 +18,8 @@
 load("@rules_foreign_cc//tools/build_defs:make.bzl", "make")
 
 make(
-  name = "bzip2",
-  lib_source = "@bzip2//:all",
-  static_libraries = ["libbz2.a"],
-  visibility = ["//visibility:public"],
+    name = "bzip2",
+    lib_source = "@bzip2//:all",
+    static_libraries = ["libbz2.a"],
+    visibility = ["//visibility:public"],
 )

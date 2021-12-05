@@ -20,17 +20,17 @@ cc_binary(
     srcs = [
         "laser_key_test.cc",
     ],
-    deps = [
-        "//client:laser_client",
-        "//common:service_router_http_server",
+    copts = [
+        "-Iexternal/double-conversion/",
     ],
     linkopts = [
         "-ldl",
     ],
-    copts = [
-        "-Iexternal/double-conversion/",
-    ],
     visibility = ["//visibility:public"],
+    deps = [
+        "//client:laser_client",
+        "//common:service_router_http_server",
+    ],
 )
 
 cc_binary(
@@ -38,8 +38,8 @@ cc_binary(
     srcs = [
         "laser_client_test.cc",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//client:laser_client",
     ],
-    visibility = ["//visibility:public"],
 )

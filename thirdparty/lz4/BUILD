@@ -18,8 +18,8 @@
 load("@rules_foreign_cc//tools/build_defs:make.bzl", "make")
 
 make(
-  name = "lz4",
-  lib_source = "@lz4//:all",
-  static_libraries = ["liblz4.a"],
-  visibility = ["//visibility:public"],
+    name = "lz4",
+    lib_source = "@lz4//:all",
+    static_libraries = ["liblz4.a"],
+    visibility = ["//visibility:public"],
 )
