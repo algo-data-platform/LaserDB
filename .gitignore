@@ -1,8 +1,0 @@
-
-bazel-*
-.vscode/
-*.pyc
-compile_commands.json
-build/
-.docusaurus/
-node_modules/
