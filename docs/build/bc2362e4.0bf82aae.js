@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[30],{86:function(a){a.exports=JSON.parse('{"allTagsPath":"/LaserDB/blog/tags","slug":"laser-db","name":"laserdb","count":1,"permalink":"/LaserDB/blog/tags/laser-db"}')}}]);

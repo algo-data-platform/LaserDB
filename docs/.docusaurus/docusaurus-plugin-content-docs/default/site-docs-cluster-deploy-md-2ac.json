@@ -1,0 +1,22 @@
+{
+  "unversionedId": "cluster-deploy",
+  "id": "cluster-deploy",
+  "isDocsHomePage": false,
+  "title": "集群部署",
+  "description": "机器环境初始化",
+  "source": "@site/docs/cluster-deploy.md",
+  "slug": "/cluster-deploy",
+  "permalink": "/LaserDB/docs/cluster-deploy",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/cluster-deploy.md",
+  "version": "current",
+  "sidebar_label": "集群部署",
+  "sidebar": "docs",
+  "previous": {
+    "title": "常见数据库对比",
+    "permalink": "/LaserDB/docs/comparison-to-alternatives"
+  },
+  "next": {
+    "title": "集群配置",
+    "permalink": "/LaserDB/docs/cluster-config"
+  }
+}

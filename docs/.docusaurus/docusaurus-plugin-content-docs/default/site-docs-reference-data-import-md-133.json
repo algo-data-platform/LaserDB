@@ -1,0 +1,22 @@
+{
+  "unversionedId": "reference/data-import",
+  "id": "reference/data-import",
+  "isDocsHomePage": false,
+  "title": "批量导入",
+  "description": "LaserDB 目前除了应用于普通工程当作数据存储介质、Cache 以外，在机器学习中需要使用 LaserDB 存储大规模的特征与模型数据，对于机器学习中的特征和模型数据一般需要离线批量替换、近线批量更新、实时更新三种方式来",
+  "source": "@site/docs/reference/data-import.md",
+  "slug": "/reference/data-import",
+  "permalink": "/LaserDB/docs/reference/data-import",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/reference/data-import.md",
+  "version": "current",
+  "sidebar_label": "批量导入",
+  "sidebar": "docs",
+  "previous": {
+    "title": "数据分片",
+    "permalink": "/LaserDB/docs/reference/data-shard"
+  },
+  "next": {
+    "title": "存储引擎",
+    "permalink": "/LaserDB/docs/reference/engine"
+  }
+}

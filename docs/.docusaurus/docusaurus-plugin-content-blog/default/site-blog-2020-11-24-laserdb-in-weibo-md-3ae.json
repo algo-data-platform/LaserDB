@@ -1,0 +1,20 @@
+{
+  "permalink": "/LaserDB/blog/laserdb-in-weibo",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/blog/blog/2020-11-24-laserdb-in-weibo.md",
+  "source": "@site/blog/2020-11-24-laserdb-in-weibo.md",
+  "description": "背景",
+  "date": "2020-11-24T00:00:00.000Z",
+  "tags": [
+    {
+      "label": "LaserDB",
+      "permalink": "/LaserDB/blog/tags/laser-db"
+    },
+    {
+      "label": "Weibo",
+      "permalink": "/LaserDB/blog/tags/weibo"
+    }
+  ],
+  "title": "微博自研 KV 分布式存储系统 LaserDB 的实现与应用",
+  "readingTime": 30.105,
+  "truncated": false
+}

@@ -1,0 +1,22 @@
+{
+  "unversionedId": "doc1",
+  "id": "doc1",
+  "isDocsHomePage": false,
+  "title": "Style Guide",
+  "description": "You can write content using GitHub-flavored Markdown syntax.",
+  "source": "@site/docs/doc1.md",
+  "slug": "/xxx",
+  "permalink": "/LaserDB/docs/xxx",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/doc1.md",
+  "version": "current",
+  "sidebar_label": "Style Guide",
+  "sidebar": "docs",
+  "previous": {
+    "title": "监控告警",
+    "permalink": "/LaserDB/docs/monitor"
+  },
+  "next": {
+    "title": "数据模型",
+    "permalink": "/LaserDB/docs/reference/data-model"
+  }
+}

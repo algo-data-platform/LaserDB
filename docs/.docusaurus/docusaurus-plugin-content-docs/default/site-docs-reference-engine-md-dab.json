@@ -1,0 +1,22 @@
+{
+  "unversionedId": "reference/engine",
+  "id": "reference/engine",
+  "isDocsHomePage": false,
+  "title": "存储引擎",
+  "description": "对于 Laser 存储系统来说，主要的需求读写高性能、存储容量大以及可以支持批量导入。如果实现大容量存储肯定不能只是把数据存放到内存中，为了同时满足大容量存储和高性能读写的需求，最终在它们两个之间进行权衡",
+  "source": "@site/docs/reference/engine.md",
+  "slug": "/reference/engine",
+  "permalink": "/LaserDB/docs/reference/engine",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/reference/engine.md",
+  "version": "current",
+  "sidebar_label": "存储引擎",
+  "sidebar": "docs",
+  "previous": {
+    "title": "批量导入",
+    "permalink": "/LaserDB/docs/reference/data-import"
+  },
+  "next": {
+    "title": "Laser Server 配置",
+    "permalink": "/LaserDB/docs/reference/server-config"
+  }
+}

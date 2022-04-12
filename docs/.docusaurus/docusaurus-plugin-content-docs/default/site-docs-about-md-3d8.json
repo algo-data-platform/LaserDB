@@ -1,0 +1,18 @@
+{
+  "unversionedId": "about",
+  "id": "about",
+  "isDocsHomePage": false,
+  "title": "LaserDB",
+  "description": "欢迎来到 LaserDB 文档! 主要由 Manual, Server, Proxy, Control 和 Driver 五部分组成.",
+  "source": "@site/docs/about.md",
+  "slug": "/",
+  "permalink": "/LaserDB/docs/",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/about.md",
+  "version": "current",
+  "sidebar_label": "LaserDB",
+  "sidebar": "docs",
+  "next": {
+    "title": "快速上手",
+    "permalink": "/LaserDB/docs/getting-started"
+  }
+}

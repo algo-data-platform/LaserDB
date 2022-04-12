@@ -1,0 +1,22 @@
+{
+  "unversionedId": "getting-started",
+  "id": "getting-started",
+  "isDocsHomePage": false,
+  "title": "快速上手",
+  "description": "通过阅读本节内容可以快速的体验 LaserDB，通过 Docker Compose 可以快速的创建一个完整的 Laser 测试集群, 方便快速的了解 Laser 的功能特性",
+  "source": "@site/docs/getting-started.md",
+  "slug": "/getting-started",
+  "permalink": "/LaserDB/docs/getting-started",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/getting-started.md",
+  "version": "current",
+  "sidebar_label": "快速上手",
+  "sidebar": "docs",
+  "previous": {
+    "title": "LaserDB",
+    "permalink": "/LaserDB/docs/"
+  },
+  "next": {
+    "title": "常见数据库对比",
+    "permalink": "/LaserDB/docs/comparison-to-alternatives"
+  }
+}

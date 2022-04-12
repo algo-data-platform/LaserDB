@@ -1,0 +1,21 @@
+{
+  "unversionedId": "reference/server-error-code",
+  "id": "reference/server-error-code",
+  "isDocsHomePage": false,
+  "title": "错误码",
+  "source": "@site/docs/reference/server-error-code.md",
+  "slug": "/reference/server-error-code",
+  "permalink": "/LaserDB/docs/reference/server-error-code",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/reference/server-error-code.md",
+  "version": "current",
+  "sidebar_label": "错误码",
+  "sidebar": "docs",
+  "previous": {
+    "title": "Laser Server 配置",
+    "permalink": "/LaserDB/docs/reference/server-config"
+  },
+  "next": {
+    "title": "常见问题",
+    "permalink": "/LaserDB/docs/fqa"
+  }
+}

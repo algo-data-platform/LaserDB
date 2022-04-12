@@ -1,0 +1,21 @@
+{
+  "unversionedId": "cluster-config",
+  "id": "cluster-config",
+  "isDocsHomePage": false,
+  "title": "集群配置",
+  "source": "@site/docs/cluster-config.md",
+  "slug": "/cluster-config",
+  "permalink": "/LaserDB/docs/cluster-config",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/cluster-config.md",
+  "version": "current",
+  "sidebar_label": "集群配置",
+  "sidebar": "docs",
+  "previous": {
+    "title": "集群部署",
+    "permalink": "/LaserDB/docs/cluster-deploy"
+  },
+  "next": {
+    "title": "Laser 客户端",
+    "permalink": "/LaserDB/docs/laser-client"
+  }
+}

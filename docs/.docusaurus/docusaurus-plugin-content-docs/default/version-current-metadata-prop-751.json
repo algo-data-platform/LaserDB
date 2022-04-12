@@ -1,0 +1,148 @@
+{
+  "pluginId": "default",
+  "version": "current",
+  "label": "Next",
+  "isLast": true,
+  "docsSidebars": {
+    "docs": [
+      {
+        "type": "link",
+        "label": "LaserDB",
+        "href": "/LaserDB/docs/"
+      },
+      {
+        "type": "link",
+        "label": "快速上手",
+        "href": "/LaserDB/docs/getting-started"
+      },
+      {
+        "type": "link",
+        "label": "常见数据库对比",
+        "href": "/LaserDB/docs/comparison-to-alternatives"
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "集群部署",
+        "items": [
+          {
+            "type": "link",
+            "label": "集群部署",
+            "href": "/LaserDB/docs/cluster-deploy"
+          },
+          {
+            "type": "link",
+            "label": "集群配置",
+            "href": "/LaserDB/docs/cluster-config"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "生态工具",
+        "items": [
+          {
+            "type": "link",
+            "label": "Laser 客户端",
+            "href": "/LaserDB/docs/laser-client"
+          },
+          {
+            "type": "link",
+            "label": "Laser Proxy",
+            "href": "/LaserDB/docs/laser-proxy"
+          },
+          {
+            "type": "link",
+            "label": "Laser Transform",
+            "href": "/LaserDB/docs/laser-transform"
+          }
+        ]
+      },
+      {
+        "type": "link",
+        "label": "监控告警",
+        "href": "/LaserDB/docs/monitor"
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "教程",
+        "items": [
+          {
+            "type": "link",
+            "label": "Style Guide",
+            "href": "/LaserDB/docs/xxx"
+          }
+        ]
+      },
+      {
+        "collapsed": true,
+        "type": "category",
+        "label": "参考指南",
+        "items": [
+          {
+            "type": "link",
+            "label": "数据模型",
+            "href": "/LaserDB/docs/reference/data-model"
+          },
+          {
+            "type": "link",
+            "label": "数据分片",
+            "href": "/LaserDB/docs/reference/data-shard"
+          },
+          {
+            "type": "link",
+            "label": "批量导入",
+            "href": "/LaserDB/docs/reference/data-import"
+          },
+          {
+            "type": "link",
+            "label": "存储引擎",
+            "href": "/LaserDB/docs/reference/engine"
+          },
+          {
+            "type": "link",
+            "label": "Laser Server 配置",
+            "href": "/LaserDB/docs/reference/server-config"
+          },
+          {
+            "type": "link",
+            "label": "错误码",
+            "href": "/LaserDB/docs/reference/server-error-code"
+          }
+        ]
+      },
+      {
+        "type": "link",
+        "label": "常见问题",
+        "href": "/LaserDB/docs/fqa"
+      },
+      {
+        "type": "link",
+        "label": "术语表",
+        "href": "/LaserDB/docs/terminology"
+      }
+    ]
+  },
+  "permalinkToSidebar": {
+    "/LaserDB/docs/": "docs",
+    "/LaserDB/docs/cluster-config": "docs",
+    "/LaserDB/docs/cluster-deploy": "docs",
+    "/LaserDB/docs/comparison-to-alternatives": "docs",
+    "/LaserDB/docs/xxx": "docs",
+    "/LaserDB/docs/fqa": "docs",
+    "/LaserDB/docs/getting-started": "docs",
+    "/LaserDB/docs/laser-client": "docs",
+    "/LaserDB/docs/laser-proxy": "docs",
+    "/LaserDB/docs/laser-transform": "docs",
+    "/LaserDB/docs/monitor": "docs",
+    "/LaserDB/docs/reference/data-import": "docs",
+    "/LaserDB/docs/reference/data-model": "docs",
+    "/LaserDB/docs/reference/data-shard": "docs",
+    "/LaserDB/docs/reference/engine": "docs",
+    "/LaserDB/docs/reference/server-config": "docs",
+    "/LaserDB/docs/reference/server-error-code": "docs",
+    "/LaserDB/docs/terminology": "docs"
+  }
+}

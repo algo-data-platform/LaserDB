@@ -1,0 +1,22 @@
+{
+  "unversionedId": "fqa",
+  "id": "fqa",
+  "isDocsHomePage": false,
+  "title": "常见问题",
+  "description": "通用",
+  "source": "@site/docs/fqa.md",
+  "slug": "/fqa",
+  "permalink": "/LaserDB/docs/fqa",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/fqa.md",
+  "version": "current",
+  "sidebar_label": "常见问题",
+  "sidebar": "docs",
+  "previous": {
+    "title": "错误码",
+    "permalink": "/LaserDB/docs/reference/server-error-code"
+  },
+  "next": {
+    "title": "术语表",
+    "permalink": "/LaserDB/docs/terminology"
+  }
+}

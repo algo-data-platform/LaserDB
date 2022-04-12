@@ -1,0 +1,12 @@
+{
+  "unversionedId": "reference/server-metrics",
+  "id": "reference/server-metrics",
+  "isDocsHomePage": false,
+  "title": "server-metrics",
+  "description": "监控指标",
+  "source": "@site/docs/reference/server-metrics.md",
+  "slug": "/reference/server-metrics",
+  "permalink": "/LaserDB/docs/reference/server-metrics",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/reference/server-metrics.md",
+  "version": "current"
+}

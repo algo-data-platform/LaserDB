@@ -1,0 +1,22 @@
+{
+  "unversionedId": "reference/data-shard",
+  "id": "reference/data-shard",
+  "isDocsHomePage": false,
+  "title": "数据分片",
+  "description": "通过数据分片的方式可以实现分布式的水平扩容，一般的数据库都是通过 key hash 的方式来切分数据，比如 Redis 引入 Slot 的概念来实现数据库的水平扩展。Laser 是通过数据分片 （Shard）的方式",
+  "source": "@site/docs/reference/data-shard.md",
+  "slug": "/reference/data-shard",
+  "permalink": "/LaserDB/docs/reference/data-shard",
+  "editUrl": "https://github.com/algo-data-platform/LaserDB/edit/main/docs/docs/reference/data-shard.md",
+  "version": "current",
+  "sidebar_label": "数据分片",
+  "sidebar": "docs",
+  "previous": {
+    "title": "数据模型",
+    "permalink": "/LaserDB/docs/reference/data-model"
+  },
+  "next": {
+    "title": "批量导入",
+    "permalink": "/LaserDB/docs/reference/data-import"
+  }
+}
