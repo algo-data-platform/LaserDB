@@ -1,9 +1,0 @@
-{
-  "title": "Recent posts",
-  "items": [
-    {
-      "title": "微博自研 KV 分布式存储系统 LaserDB 的实现与应用",
-      "permalink": "/LaserDB/blog/laserdb-in-weibo"
-    }
-  ]
-}
