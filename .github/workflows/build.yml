@@ -1,13 +1,21 @@
----
-name: Build and test
+name: build
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
-  workflow_dispatch:
+    paths-ignore:
+      - "docs/**"
+      - "demo/**"
+      - "tools/**"
+      - "docker/**"
+      - ".github/**"
+      - "README.md"
+      - "LICENSE"
+      - "install-bazel.sh"
 
 jobs:
-  target:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -31,4 +39,3 @@ jobs:
         run: |
           sudo apt-get install gperf -y
           bazel build //:release-tars
-
