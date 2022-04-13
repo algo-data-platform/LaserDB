@@ -1,6 +1,7 @@
 ![](https://algo-data-platform.github.io/LaserDB/img/logo.png)
 
-![Build Status](https://github.com/algo-data-platform/LaserDB/actions/workflows/build.yml/badge.svg?branch=main)
+![Build Status](https://github.com/algo-data-platform/LaserDB/workflows/build/badge.svg?branch=main)
+![Build Status](https://github.com/algo-data-platform/LaserDB/workflows/docs/badge.svg?branch=main)
 
 ## What is LaserDB
 

@@ -11,9 +11,9 @@ slug: /cluster-deploy
 
 - 安装 ansible，以 centos 为例:
 
-  ```shell
-  yum install ansible
-  ```
+```shell
+yum install ansible
+```
 
 - 使用 ssh-keygen 生成公私钥对，默认生成到 ~/.ssh 目录。
 
@@ -21,18 +21,18 @@ slug: /cluster-deploy
 
 - 服务器需要创建 adbot 用户，并以 adbot 用户运行 sshd 服务，监听 30022 端口，authorized_keys 文件中添加中控机生成的秘钥对中的公钥 id_rsa.pub。
 
-  我们提供了快捷配置脚本，使用如下：
+我们提供了快捷配置脚本，使用如下：
 
-  ```shell
-  git clone laser-control
-  cd laser-control/deploy
-  vim ansible_install_agent.sh # 将其中的 SSH_PUBLIC_KEY 替换成中控机中生成的秘钥对中的公钥 id_rsa.pub
-  sh ansible_install_agent.sh
-  ```
-  
-  :::caution 注意
-  此快捷配置脚本仅支持 CentOS 7
-  :::
+```shell
+git clone laser-control
+cd laser-control/deploy
+vim ansible_install_agent.sh # 将其中的 SSH_PUBLIC_KEY 替换成中控机中生成的秘钥对中的公钥 id_rsa.pub
+sh ansible_install_agent.sh
+```
+
+:::caution 注意
+此快捷配置脚本仅支持 CentOS 7
+:::
 
 - 创建软链 /usr/local/adbot 链接到数据磁盘目录。
 
@@ -46,7 +46,6 @@ ssh 目标机器IP -p 30022
 ```
 
 测试是否能够登陆到目标机器，如果登陆成功，则说明环境配置正确。
-
 
 
 ## Consul ServiceName 创建

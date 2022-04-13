@@ -37,7 +37,6 @@ module.exports = {
 		type: 'category',
 		label: '教程',
 		items: [
-			'doc1',
 		]
 	},
 	{
