@@ -196,8 +196,9 @@ def include_repositories():
         name = "folly",
         build_file = "@//thirdparty/folly:folly.BUILD",
         patches = [
-            "@//thirdparty/folly:folly.patch",
             "@//thirdparty/folly:folly1.patch",
+            "@//thirdparty/folly:folly2.patch",
+            "@//thirdparty/folly:folly3.patch",
         ],
         patch_args = [
             "-p1",
@@ -327,7 +328,7 @@ def include_repositories():
     http_jar(
         name = "lombok",
         url = "https://projectlombok.org/downloads/lombok.jar",
-        sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7",
+        # sha256 = "7206cbbfd6efd5e85bceff29545633645650be58d58910a23b0d4835fbd15ed7",
     )
 
     maven_install(

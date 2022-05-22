@@ -1,0 +1,10 @@
+--- b/folly/TimeoutQueue.cpp	2020-10-25 17:16:06.000000000 +0800
++++ a/folly/TimeoutQueue.cpp	2022-05-22 00:52:27.185295036 +0800
+@@ -17,6 +17,7 @@
+ #include <folly/TimeoutQueue.h>
+ #include <algorithm>
+ #include <vector>
++#include <limits>
+ 
+ namespace folly {
+ 
